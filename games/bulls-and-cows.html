@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bulls and Cows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --chalkboard: #24402f;
+    --chalkboard-dark: #172c20;
+    --chalk-white: #ece7d6;
+    --chalk-dim: #b9c2ac;
+    --paper: #fbf8ef;
+    --paper-line: #ddd3ae;
+    --ink: #2b2b28;
+    --ink-soft: #6b6355;
+    --wood: #6b4a34;
+    --focus: #8fb8d6;
+    --gold: #e3b23c;
+    --gold-dark: #93701f;
+    --hard: #c1594a;
+    --hard-dark: #7c3527;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--chalkboard);
+    color: var(--chalk-white);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.03), transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(255,255,255,0.03), transparent 60%);
+    padding: 28px 16px 60px;
+  }
+
+  .board {
+    max-width: 640px;
+    margin: 0 auto;
+    border: 10px solid var(--wood);
+    border-radius: 14px;
+    padding: 36px 32px 44px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35), inset 0 0 60px rgba(0,0,0,0.25);
+    background: var(--chalkboard);
+  }
+
+  .back-link {
+    display: inline-block;
+    font-family: 'Caveat', cursive;
+    font-size: 1.15rem;
+    color: var(--chalk-dim);
+    text-decoration: none;
+    margin-bottom: 8px;
+    transition: color 0.15s ease;
+  }
+  .back-link:hover, .back-link:focus-visible { color: var(--chalk-white); }
+
+  header { text-align: center; margin-bottom: 30px; }
+
+  header h1 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: clamp(2.6rem, 6vw, 4rem);
+    margin: 0;
+    color: var(--chalk-white);
+    text-shadow: 0 0 1px rgba(236,231,214,0.4);
+    letter-spacing: 0.5px;
+  }
+
+  header p {
+    font-family: 'Caveat', cursive;
+    font-size: 1.35rem;
+    color: var(--chalk-dim);
+    margin: 4px 0 0;
+  }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    text-align: center;
+  }
+
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 26px;
+    background: #c7bfa3;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+
+  .panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a8266;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .segmented {
+    display: inline-flex;
+    justify-content: center;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .segmented button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 9px 16px;
+    border: none;
+    background: #fffdf7;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .segmented button + button { border-left: 1.5px solid var(--paper-line); }
+  .segmented button.active { background: var(--ink); color: var(--paper); }
+
+  .new-btn {
+    display: block;
+    margin: 18px auto 0;
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.03em;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+    transition: transform 0.08s ease;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  /* ---- game ---- */
+  .game-wrap { margin-top: 34px; }
+
+  .game {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 24px 22px 26px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.32);
+  }
+
+  .rules-line {
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.3rem;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+  }
+
+  .digit-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .digit-box {
+    width: 46px;
+    height: 52px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1.6rem;
+    text-align: center;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: #fffefa;
+    color: var(--ink);
+  }
+  .digit-box:focus {
+    outline: none;
+    border-color: var(--focus);
+    box-shadow: 0 0 0 3px rgba(143,184,214,0.3);
+  }
+
+  .action-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .guess-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.35rem;
+    padding: 8px 24px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .guess-btn:hover { transform: translateY(-1px); }
+  .guess-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .error-msg {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--hard-dark);
+    min-height: 1.2em;
+    margin-bottom: 10px;
+  }
+
+  .util-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .ghost-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .history {
+    border-top: 1.5px dashed var(--paper-line);
+    padding-top: 14px;
+  }
+
+  .history-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    padding: 5px 4px;
+  }
+  .history-row:nth-child(odd) { background: rgba(0,0,0,0.03); }
+  .history-row .guess-num { letter-spacing: 0.2em; }
+  .history-row .score .bulls { color: var(--gold-dark); font-weight: 700; }
+  .history-row .score .cows { color: var(--ink-soft); }
+
+  .win-banner {
+    display: none;
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.7rem;
+    color: var(--gold-dark);
+    margin-top: 14px;
+  }
+  .win-banner.show { display: block; }
+
+  footer {
+    text-align: center;
+    color: var(--chalk-dim);
+    font-size: 0.78rem;
+    margin-top: 34px;
+  }
+
+  @media (max-width: 560px) {
+    .board { padding: 24px 16px 34px; }
+    .digit-box { width: 38px; height: 46px; font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All activities</a>
+  <header>
+    <h1>Bulls and Cows</h1>
+    <p>guess the secret number, one clue at a time</p>
+  </header>
+
+  <div class="panel">
+    <div class="field">
+      <label>How many digits</label>
+      <div class="segmented" id="lengthToggle">
+        <button type="button" data-len="3">3</button>
+        <button type="button" data-len="4" class="active">4</button>
+        <button type="button" data-len="5">5</button>
+      </div>
+    </div>
+    <button type="button" class="new-btn" id="newBtn">New secret number</button>
+  </div>
+
+  <div class="game-wrap">
+    <div class="game">
+      <div class="rules-line" id="rulesLine"></div>
+      <div class="digit-row" id="digitRow"></div>
+      <div class="action-row">
+        <button type="button" class="guess-btn" id="guessBtn">Guess</button>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+      <div class="util-row">
+        <button type="button" class="ghost-btn" id="giveUpBtn">Reveal the number</button>
+      </div>
+      <div class="win-banner" id="winBanner"></div>
+      <div class="history" id="history"></div>
+    </div>
+  </div>
+
+  <footer><span class="score"><span class="bulls">Bull</span> = right digit, right spot.</span> <span class="score"><span class="cows">Cow</span> = right digit, wrong spot.</span> No repeated digits, in the secret or in your guess.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  function makeSecret(len){
+    const digits = ['1','2','3','4','5','6','7','8','9']; // no leading zero
+    const first = digits.splice(Math.floor(Math.random()*digits.length),1)[0];
+    const rest = ['0'].concat(digits);
+    const chosen = [first];
+    while(chosen.length < len){
+      const idx = Math.floor(Math.random()*rest.length);
+      chosen.push(rest.splice(idx,1)[0]);
+    }
+    return chosen.join('');
+  }
+
+  function score(secret, guess){
+    let bulls = 0, cows = 0;
+    for(let i=0;i<secret.length;i++){
+      if(guess[i]===secret[i]) bulls++;
+      else if(secret.includes(guess[i])) cows++;
+    }
+    return { bulls, cows };
+  }
+
+  /* ---------------- UI wiring ---------------- */
+  const lengthToggle = document.getElementById('lengthToggle');
+  const newBtn = document.getElementById('newBtn');
+  const rulesLine = document.getElementById('rulesLine');
+  const digitRow = document.getElementById('digitRow');
+  const guessBtn = document.getElementById('guessBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const giveUpBtn = document.getElementById('giveUpBtn');
+  const winBanner = document.getElementById('winBanner');
+  const history = document.getElementById('history');
+
+  let length = 4;
+  let secret = '';
+  let guessCount = 0;
+  let won = false;
+  let boxes = [];
+
+  function buildBoxes(){
+    digitRow.innerHTML = '';
+    boxes = [];
+    for(let i=0;i<length;i++){
+      const box = document.createElement('input');
+      box.type = 'text';
+      box.className = 'digit-box';
+      box.maxLength = 1;
+      box.inputMode = 'numeric';
+      box.addEventListener('input', ()=>{
+        box.value = box.value.replace(/[^0-9]/g,'');
+        if(box.value && boxes[i+1]) boxes[i+1].focus();
+      });
+      box.addEventListener('keydown', (e)=>{
+        if(e.key==='Backspace' && !box.value && boxes[i-1]) boxes[i-1].focus();
+        if(e.key==='Enter') submitGuess();
+      });
+      boxes.push(box);
+      digitRow.appendChild(box);
+    }
+  }
+
+  function submitGuess(){
+    if(won) return;
+    const guess = boxes.map(b=>b.value).join('');
+    errorMsg.textContent = '';
+    if(guess.length !== length || boxes.some(b=>b.value==='')){
+      errorMsg.textContent = `Enter all ${length} digits first.`;
+      return;
+    }
+    if(new Set(guess.split('')).size !== length){
+      errorMsg.textContent = 'No repeated digits allowed.';
+      return;
+    }
+    guessCount++;
+    const { bulls, cows } = score(secret, guess);
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    row.innerHTML = `<span class="guess-num">${guess}</span><span class="score"><span class="bulls">${bulls} bull${bulls===1?'':'s'}</span> · <span class="cows">${cows} cow${cows===1?'':'s'}</span></span>`;
+    history.insertBefore(row, history.firstChild);
+
+    if(bulls === length){
+      won = true;
+      winBanner.textContent = `Solved it in ${guessCount} guess${guessCount===1?'':'es'}!`;
+      winBanner.classList.add('show');
+      guessBtn.disabled = true;
+    } else {
+      boxes.forEach(b=>{ b.value=''; });
+      boxes[0].focus();
+    }
+  }
+
+  function startGame(){
+    secret = makeSecret(length);
+    guessCount = 0;
+    won = false;
+    winBanner.classList.remove('show');
+    winBanner.textContent = '';
+    guessBtn.disabled = false;
+    errorMsg.textContent = '';
+    history.innerHTML = '';
+    rulesLine.textContent = `I'm thinking of a ${length}-digit number with no repeated digits. Guess it!`;
+    buildBoxes();
+    boxes[0].focus();
+  }
+
+  lengthToggle.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    Array.from(lengthToggle.children).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    length = Number(btn.dataset.len);
+    startGame();
+  });
+
+  newBtn.addEventListener('click', startGame);
+  guessBtn.addEventListener('click', submitGuess);
+  giveUpBtn.addEventListener('click', ()=>{
+    if(!won){
+      const row = document.createElement('div');
+      row.className = 'history-row';
+      row.innerHTML = `<span class="guess-num">${secret}</span><span class="score">revealed</span>`;
+      history.insertBefore(row, history.firstChild);
+      won = true;
+      guessBtn.disabled = true;
+    }
+  });
+
+  startGame();
+
+})();
+</script>
+
+</body>
+</html>

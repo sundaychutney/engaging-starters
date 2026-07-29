@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Product Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --chalkboard: #24402f;
+    --chalkboard-dark: #172c20;
+    --chalk-white: #ece7d6;
+    --chalk-dim: #b9c2ac;
+    --paper: #fbf8ef;
+    --paper-line: #ddd3ae;
+    --ink: #2b2b28;
+    --ink-soft: #6b6355;
+    --wood: #6b4a34;
+    --focus: #8fb8d6;
+    --p1: #8fb8d6;
+    --p1-dark: #3f6f92;
+    --p2: #c1594a;
+    --p2-dark: #7c3527;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--chalkboard);
+    color: var(--chalk-white);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.03), transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(255,255,255,0.03), transparent 60%);
+    padding: 28px 16px 60px;
+  }
+
+  .board {
+    max-width: 760px;
+    margin: 0 auto;
+    border: 10px solid var(--wood);
+    border-radius: 14px;
+    padding: 36px 32px 44px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35), inset 0 0 60px rgba(0,0,0,0.25);
+    background: var(--chalkboard);
+  }
+
+  .back-link {
+    display: inline-block;
+    font-family: 'Caveat', cursive;
+    font-size: 1.15rem;
+    color: var(--chalk-dim);
+    text-decoration: none;
+    margin-bottom: 8px;
+    transition: color 0.15s ease;
+  }
+  .back-link:hover, .back-link:focus-visible { color: var(--chalk-white); }
+
+  header { text-align: center; margin-bottom: 26px; }
+
+  header h1 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: clamp(2.6rem, 6vw, 4rem);
+    margin: 0;
+    color: var(--chalk-white);
+    text-shadow: 0 0 1px rgba(236,231,214,0.4);
+    letter-spacing: 0.5px;
+  }
+
+  header p {
+    font-family: 'Caveat', cursive;
+    font-size: 1.35rem;
+    color: var(--chalk-dim);
+    margin: 4px 0 0;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .ghost-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border: 1.5px solid var(--chalk-dim);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--chalk-white);
+    cursor: pointer;
+  }
+  .ghost-btn:hover { background: rgba(236,231,214,0.08); }
+
+  .turn-banner {
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.6rem;
+    margin-bottom: 18px;
+    color: var(--chalk-white);
+  }
+  .turn-banner .swatch {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 8px;
+    margin-bottom: 3px;
+  }
+
+  /* ---- factor tracks ---- */
+  .tracks {
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+  }
+
+  .track-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0;
+  }
+  .track-row:first-child { margin-top: 0; }
+  .track-row:last-child { margin-bottom: 0; }
+
+  .track-label {
+    width: 76px;
+    flex-shrink: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+  }
+
+  .track-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .factor-btn {
+    width: 34px;
+    height: 34px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: 2px solid var(--ink);
+    border-radius: 7px;
+    background: #fffefa;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .factor-btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .factor-btn:disabled { cursor: not-allowed; opacity: 0.55; }
+  .factor-btn.markerA { background: var(--p1); border-color: var(--p1-dark); color: var(--p1-dark); }
+  .factor-btn.markerB { background: var(--p2); border-color: var(--p2-dark); color: #fff; }
+
+  /* ---- product grid ---- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 14px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.32);
+  }
+
+  .cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1rem;
+    border: 2px solid var(--paper-line);
+    border-radius: 6px;
+    background: #fffefa;
+    color: var(--ink);
+  }
+  .cell.owner1 { background: var(--p1); border-color: var(--p1-dark); color: var(--p1-dark); }
+  .cell.owner2 { background: var(--p2); border-color: var(--p2-dark); color: #fff; }
+  .cell.win { box-shadow: 0 0 0 3px var(--gold, #e3b23c) inset; }
+
+  .win-banner {
+    display: none;
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.8rem;
+    color: var(--chalk-white);
+    margin-top: 18px;
+  }
+  .win-banner.show { display: block; }
+
+  footer {
+    text-align: center;
+    color: var(--chalk-dim);
+    font-size: 0.78rem;
+    margin-top: 34px;
+  }
+
+  /* ---- printable sheet (screen: hidden) ---- */
+  .print-sheet { display: none; }
+
+  @media (max-width: 560px) {
+    .board { padding: 24px 16px 34px; }
+    .factor-btn { width: 28px; height: 28px; font-size: 0.8rem; }
+    .track-label { width: 64px; font-size: 0.62rem; }
+  }
+
+  /* ---- print ---- */
+  @media print {
+    body { background: #fff; padding: 0; color: #000; }
+    .board { border: none; box-shadow: none; padding: 0; background: #fff; }
+    header, .toolbar, .turn-banner, .tracks, .grid, .win-banner, footer, .back-link { display: none; }
+
+    .print-sheet {
+      display: block;
+      color: #000;
+    }
+    .print-sheet h1 {
+      font-family: 'Caveat', cursive;
+      font-size: 2.4rem;
+      text-align: center;
+      margin: 0 0 4px;
+    }
+    .print-sheet .instructions {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin: 0 auto 18px;
+      max-width: 640px;
+    }
+    .print-sheet .print-track {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .print-sheet .print-track span {
+      width: 28px; height: 28px;
+      border: 1.5px solid #000;
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .print-sheet .print-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .print-sheet .print-grid div {
+      border: 1.5px solid #000;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All activities</a>
+  <header>
+    <h1>The Product Game</h1>
+    <p>two players, one board, four in a row wins</p>
+  </header>
+
+  <div class="toolbar">
+    <button type="button" class="ghost-btn" id="newBtn">New game</button>
+    <button type="button" class="ghost-btn" id="printBtn">Print board for pen &amp; paper</button>
+  </div>
+
+  <div class="turn-banner" id="turnBanner"></div>
+
+  <div class="tracks">
+    <div class="track-row">
+      <span class="track-label">Marker A</span>
+      <div class="track-buttons" id="trackA"></div>
+    </div>
+    <div class="track-row">
+      <span class="track-label">Marker B</span>
+      <div class="track-buttons" id="trackB"></div>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="win-banner" id="winBanner"></div>
+
+  <footer>On your turn, move one marker to a new factor. The product of the two markers gets claimed in your colour. First to get four claimed squares in a row &mdash; across, down or diagonally &mdash; wins.</footer>
+
+  <div class="print-sheet" id="printSheet">
+    <h1>The Product Game</h1>
+    <p class="instructions">
+      Two players share one pair of markers, both starting on 1 on the factor track below (use coins, counters or just write in pencil).
+      Players take turns: move <strong>one</strong> marker to a new factor, multiply the two factors together, and colour or initial that product's square on the board in your colour.
+      First player to claim four squares in a row &mdash; across, down, or diagonally &mdash; wins. Use +, &minus;, &times;, &divide; scrap paper if you need to check a product.
+    </p>
+    <div class="print-track" id="printTrack"></div>
+    <div class="print-grid" id="printGrid"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t=arr[i]; arr[i]=arr[j]; arr[j]=t;
+    }
+    return arr;
+  }
+
+  function buildGridValues(){
+    const set = new Set();
+    for(let i=1;i<=9;i++){ for(let j=1;j<=9;j++){ set.add(i*j); } }
+    return shuffle(Array.from(set));
+  }
+
+  const WIN_COLS = 6;
+
+  function checkWin(owners){
+    const rows = owners.length / WIN_COLS;
+    const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<WIN_COLS;c++){
+        const idx = r*WIN_COLS+c;
+        const owner = owners[idx];
+        if(!owner) continue;
+        for(const [dr,dc] of dirs){
+          const cells = [idx];
+          let ok = true;
+          for(let k=1;k<4;k++){
+            const nr = r+dr*k, nc = c+dc*k;
+            if(nr<0||nr>=rows||nc<0||nc>=WIN_COLS){ ok=false; break; }
+            const nidx = nr*WIN_COLS+nc;
+            if(owners[nidx]!==owner){ ok=false; break; }
+            cells.push(nidx);
+          }
+          if(ok) return { owner, cells };
+        }
+      }
+    }
+    return null;
+  }
+
+  /* ---------------- UI wiring ---------------- */
+  const newBtn = document.getElementById('newBtn');
+  const printBtn = document.getElementById('printBtn');
+  const turnBanner = document.getElementById('turnBanner');
+  const trackA = document.getElementById('trackA');
+  const trackB = document.getElementById('trackB');
+  const grid = document.getElementById('grid');
+  const winBanner = document.getElementById('winBanner');
+  const printTrack = document.getElementById('printTrack');
+  const printGrid = document.getElementById('printGrid');
+
+  let values = [];
+  let owners = [];
+  let markerA = 1, markerB = 1;
+  let currentPlayer = 1;
+  let gameOver = false;
+
+  function playerColor(p){ return p===1 ? 'var(--p1)' : 'var(--p2)'; }
+
+  function render(){
+    turnBanner.innerHTML = gameOver
+      ? ''
+      : `<span class="swatch" style="background:${playerColor(currentPlayer)}"></span>Player ${currentPlayer}'s turn &mdash; move a marker`;
+
+    [ [trackA,markerA,'markerA'], [trackB,markerB,'markerB'] ].forEach(([el, pos, cls])=>{
+      el.innerHTML = '';
+      for(let f=1; f<=9; f++){
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'factor-btn' + (f===pos ? ' '+cls : '');
+        b.textContent = f;
+        b.disabled = gameOver;
+        b.addEventListener('click', ()=> moveMarker(cls==='markerA' ? 'A' : 'B', f));
+        el.appendChild(b);
+      }
+    });
+
+    grid.innerHTML = '';
+    values.forEach((val, i)=>{
+      const cell = document.createElement('div');
+      cell.className = 'cell' + (owners[i] ? ' owner'+owners[i] : '');
+      cell.textContent = val;
+      grid.appendChild(cell);
+    });
+  }
+
+  function moveMarker(which, newPos){
+    if(gameOver) return;
+    if(which==='A') markerA = newPos; else markerB = newPos;
+    const product = markerA * markerB;
+    const idx = values.indexOf(product);
+    if(idx !== -1 && !owners[idx]){
+      owners[idx] = currentPlayer;
+      const win = checkWin(owners);
+      if(win){
+        gameOver = true;
+        render();
+        win.cells.forEach(i=>{ grid.children[i].classList.add('win'); });
+        winBanner.textContent = `Player ${win.owner} wins!`;
+        winBanner.classList.add('show');
+        return;
+      }
+    }
+    currentPlayer = currentPlayer===1 ? 2 : 1;
+    render();
+  }
+
+  function renderPrintSheet(){
+    printTrack.innerHTML = Array.from({length:9},(_,i)=>`<span>${i+1}</span>`).join('');
+    printGrid.innerHTML = values.map(v=>`<div>${v}</div>`).join('');
+  }
+
+  function newGame(){
+    values = buildGridValues();
+    owners = new Array(values.length).fill(null);
+    markerA = 1; markerB = 1;
+    currentPlayer = 1;
+    gameOver = false;
+    winBanner.classList.remove('show');
+    winBanner.textContent = '';
+    render();
+    renderPrintSheet();
+  }
+
+  newBtn.addEventListener('click', newGame);
+  printBtn.addEventListener('click', ()=> window.print());
+
+  newGame();
+
+})();
+</script>
+
+</body>
+</html>
