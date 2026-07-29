@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Countdown Numbers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --chalkboard: #24402f;
+    --chalkboard-dark: #172c20;
+    --chalk-white: #ece7d6;
+    --chalk-dim: #b9c2ac;
+    --paper: #fbf8ef;
+    --paper-line: #ddd3ae;
+    --ink: #2b2b28;
+    --ink-soft: #6b6355;
+    --wood: #6b4a34;
+    --focus: #8fb8d6;
+    --gold: #e3b23c;
+    --gold-dark: #93701f;
+    --hard: #c1594a;
+    --hard-dark: #7c3527;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--chalkboard);
+    color: var(--chalk-white);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.03), transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(255,255,255,0.03), transparent 60%);
+    padding: 28px 16px 60px;
+  }
+
+  .board {
+    max-width: 720px;
+    margin: 0 auto;
+    border: 10px solid var(--wood);
+    border-radius: 14px;
+    padding: 36px 32px 44px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35), inset 0 0 60px rgba(0,0,0,0.25);
+    background: var(--chalkboard);
+  }
+
+  .back-link {
+    display: inline-block;
+    font-family: 'Caveat', cursive;
+    font-size: 1.15rem;
+    color: var(--chalk-dim);
+    text-decoration: none;
+    margin-bottom: 8px;
+    transition: color 0.15s ease;
+  }
+  .back-link:hover, .back-link:focus-visible { color: var(--chalk-white); }
+
+  header { text-align: center; margin-bottom: 30px; }
+
+  header h1 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: clamp(2.6rem, 6vw, 4rem);
+    margin: 0;
+    color: var(--chalk-white);
+    text-shadow: 0 0 1px rgba(236,231,214,0.4);
+    letter-spacing: 0.5px;
+  }
+
+  header p {
+    font-family: 'Caveat', cursive;
+    font-size: 1.35rem;
+    color: var(--chalk-dim);
+    margin: 4px 0 0;
+  }
+
+  /* ---- control panel ---- */
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+  }
+
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 26px;
+    background: #c7bfa3;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+
+  .panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a8266;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .field-row {
+    display: flex;
+    gap: 22px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+
+  .field { flex: 1; min-width: 200px; }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .segmented {
+    display: inline-flex;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .segmented button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 8px 13px;
+    border: none;
+    background: #fffdf7;
+    color: var(--ink-soft);
+    cursor: pointer;
+    min-width: 38px;
+  }
+  .segmented button + button { border-left: 1.5px solid var(--paper-line); }
+  .segmented button.active { background: var(--ink); color: var(--paper); }
+
+  .helper-msg {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin: 14px 0 16px;
+  }
+
+  .new-btn {
+    width: 100%;
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 0.03em;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+    transition: transform 0.08s ease;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  /* ---- round display ---- */
+  .round-wrap { margin-top: 36px; }
+
+  .puzzle-card {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    padding: 26px 24px 24px;
+    position: relative;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.32);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent, transparent 27px,
+      var(--paper-line) 28px
+    );
+  }
+
+  .puzzle-card::before {
+    content: "";
+    position: absolute;
+    top: 14px; left: 14px;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--chalkboard);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+  }
+
+  .mix-tag {
+    position: absolute;
+    top: 0; right: 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #fff;
+    padding: 5px 11px 6px;
+    border-radius: 0 0 5px 5px;
+    background: var(--gold-dark);
+  }
+
+  .tiles-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 36px 0 26px;
+    flex-wrap: wrap;
+  }
+
+  .tile {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1.6rem;
+    width: 54px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--ink);
+    border-radius: 9px;
+    background: #fffefa;
+  }
+  .tile.large {
+    background: var(--gold);
+    border-color: var(--gold-dark);
+    color: var(--gold-dark);
+  }
+
+  .target-display {
+    display: block;
+    width: fit-content;
+    margin: 0 auto 20px;
+    background: var(--chalkboard-dark);
+    border: 3px solid #0f1e15;
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 2.4rem;
+    letter-spacing: 0.12em;
+    color: #ff8a5c;
+    text-shadow: 0 0 8px rgba(255,138,92,0.65);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+  }
+
+  .target-label {
+    text-align: center;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  .timer-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 10px;
+    padding-top: 18px;
+    border-top: 1.5px dashed var(--paper-line);
+  }
+
+  .timer-display {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 2rem;
+    min-width: 2.2em;
+    text-align: center;
+    color: var(--ink);
+  }
+  .timer-display.ticking { color: var(--hard-dark); }
+  .timer-display.done { color: var(--hard); }
+
+  .timer-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 16px;
+    cursor: pointer;
+  }
+  .timer-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .reveal-row {
+    text-align: center;
+    margin-top: 18px;
+  }
+
+  .reveal-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 16px;
+    cursor: pointer;
+  }
+  .reveal-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .answer {
+    display: none;
+    margin-top: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.88rem;
+    color: var(--ink);
+    line-height: 1.7;
+  }
+  .answer .answer-head {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .answer .exact { color: var(--gold-dark); }
+  .answer .miss { color: var(--hard-dark); }
+
+  .puzzle-card.revealed .answer { display: block; }
+  .puzzle-card.revealed .reveal-row { display: none; }
+
+  footer {
+    text-align: center;
+    color: var(--chalk-dim);
+    font-size: 0.78rem;
+    margin-top: 34px;
+  }
+
+  @media (max-width: 560px) {
+    .board { padding: 24px 16px 34px; }
+    .tile { width: 46px; height: 46px; font-size: 1.4rem; }
+  }
+
+  /* ---- print ---- */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .board { border: none; box-shadow: none; padding: 0; background: #fff; }
+    header, .panel { display: none; }
+    .puzzle-card { box-shadow: none; border: 1px solid #999; background-image: none; }
+    .timer-row { display: none; }
+    .reveal-row { display: none; }
+    .answer { display: none; }
+    .target-display { color: #b3401d; text-shadow: none; background: #fff; border-color: #b3401d; }
+    footer { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All activities</a>
+  <header>
+    <h1>Countdown Numbers</h1>
+    <p>six tiles, one target, the clock is ticking</p>
+  </header>
+
+  <div class="panel">
+    <div class="field-row">
+      <div class="field">
+        <label>Large numbers (25, 50, 75, 100)</label>
+        <div class="segmented" id="largeToggle">
+          <button type="button" data-large="0">0</button>
+          <button type="button" data-large="1">1</button>
+          <button type="button" data-large="2" class="active">2</button>
+          <button type="button" data-large="3">3</button>
+          <button type="button" data-large="4">4</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Timer length</label>
+        <div class="segmented" id="timerToggle">
+          <button type="button" data-secs="15">15s</button>
+          <button type="button" data-secs="30" class="active">30s</button>
+          <button type="button" data-secs="45">45s</button>
+          <button type="button" data-secs="60">60s</button>
+          <button type="button" data-secs="90">90s</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="helper-msg" id="helperMsg">Each round draws 2 large tiles and 4 small tiles, plus a random 3-digit target.</div>
+
+    <button type="button" class="new-btn" id="newBtn">New numbers</button>
+  </div>
+
+  <div class="round-wrap">
+    <div class="puzzle-card" id="puzzleCard"></div>
+  </div>
+
+  <footer>Use +, −, ×, ÷ and any of the six numbers, each at most once, to reach the target — or get as close as you can.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const LARGE = [25, 50, 75, 100];
+
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t=arr[i]; arr[i]=arr[j]; arr[j]=t;
+    }
+    return arr;
+  }
+
+  function smallPool(){
+    const arr = [];
+    for(let n=1;n<=10;n++){ arr.push(n,n); }
+    return arr;
+  }
+
+  function drawTiles(largeCount){
+    const smallCount = 6 - largeCount;
+    const chosenLarge = shuffle(LARGE.slice()).slice(0, largeCount).map(n=>({ n, large:true }));
+    const chosenSmall = shuffle(smallPool()).slice(0, smallCount).map(n=>({ n, large:false }));
+    return shuffle(chosenLarge.concat(chosenSmall));
+  }
+
+  function randomTarget(){
+    return 100 + Math.floor(Math.random()*900);
+  }
+
+  /* ---------------- live solver ----------------
+     Recursively combines any two remaining numbers with +, -, *, / (skipping
+     trivial/non-integer/non-positive results), tracking the working for each
+     value produced. Every intermediate result is a valid "answer" - using
+     all six tiles is not required. Stops early on an exact match. */
+  function solveNumbers(nums, target){
+    let best = null;
+    let exact = false;
+
+    function consider(value, steps){
+      const diff = Math.abs(value - target);
+      if(!best || diff < best.diff){ best = { value, diff, steps }; }
+      if(diff === 0){ exact = true; }
+    }
+
+    function combine(list){
+      if(exact) return;
+      for(const item of list) consider(item.value, item.steps);
+      for(let i=0;i<list.length && !exact;i++){
+        for(let j=i+1;j<list.length && !exact;j++){
+          const a = list[i], b = list[j];
+          const rest = list.filter((_,k)=>k!==i && k!==j);
+          const candidates = [];
+
+          candidates.push({ value:a.value+b.value, line:`${a.value} + ${b.value} = ${a.value+b.value}` });
+          if(a.value!==1 && b.value!==1){
+            candidates.push({ value:a.value*b.value, line:`${a.value} × ${b.value} = ${a.value*b.value}` });
+          }
+          if(a.value>b.value){
+            candidates.push({ value:a.value-b.value, line:`${a.value} − ${b.value} = ${a.value-b.value}` });
+          } else if(b.value>a.value){
+            candidates.push({ value:b.value-a.value, line:`${b.value} − ${a.value} = ${b.value-a.value}` });
+          }
+          if(b.value!==1 && a.value%b.value===0){
+            candidates.push({ value:a.value/b.value, line:`${a.value} ÷ ${b.value} = ${a.value/b.value}` });
+          }
+          if(a.value!==1 && b.value%a.value===0){
+            candidates.push({ value:b.value/a.value, line:`${b.value} ÷ ${a.value} = ${b.value/a.value}` });
+          }
+
+          for(const c of candidates){
+            const node = { value:c.value, steps:a.steps.concat(b.steps).concat([c.line]) };
+            combine(rest.concat([node]));
+            if(exact) return;
+          }
+        }
+      }
+    }
+
+    combine(nums.map(n=>({ value:n, steps:[] })));
+    return best;
+  }
+
+  /* ---------------- UI wiring ---------------- */
+  const largeToggle = document.getElementById('largeToggle');
+  const timerToggle = document.getElementById('timerToggle');
+  const helperMsg = document.getElementById('helperMsg');
+  const newBtn = document.getElementById('newBtn');
+  const puzzleCard = document.getElementById('puzzleCard');
+
+  let largeCount = 2;
+  let timerLength = 30;
+  let intervalId = null;
+  let currentSet = null;
+
+  function updateHelper(){
+    helperMsg.textContent = `Each round draws ${largeCount} large tile${largeCount===1?'':'s'} and ${6-largeCount} small tile${6-largeCount===1?'':'s'}, plus a random 3-digit target.`;
+  }
+
+  function renderCard(set){
+    clearInterval(intervalId);
+    intervalId = null;
+    puzzleCard.classList.remove('revealed');
+
+    puzzleCard.innerHTML = `
+      <span class="mix-tag">${set.largeCount} large &middot; ${6-set.largeCount} small</span>
+      <div class="target-label">Target</div>
+      <div class="target-display">${set.target}</div>
+      <div class="tiles-row">
+        ${set.tiles.map(t=>`<span class="tile ${t.large?'large':''}">${t.n}</span>`).join('')}
+      </div>
+      <div class="timer-row">
+        <span class="timer-display" data-seconds="${timerLength}">${timerLength}</span>
+        <button type="button" class="timer-btn" data-state="idle">Start ${timerLength}s</button>
+      </div>
+      <div class="reveal-row">
+        <button type="button" class="reveal-btn">Reveal answer</button>
+      </div>
+      <div class="answer"></div>
+    `;
+
+    const timerDisplay = puzzleCard.querySelector('.timer-display');
+    const timerBtn = puzzleCard.querySelector('.timer-btn');
+    const revealBtn = puzzleCard.querySelector('.reveal-btn');
+    const answerBox = puzzleCard.querySelector('.answer');
+
+    revealBtn.addEventListener('click', ()=>{
+      const result = solveNumbers(set.tiles.map(t=>t.n), set.target);
+      let html;
+      if(!result){
+        html = `<div class="answer-head">Working</div><div>No combination found.</div>`;
+      } else if(result.steps.length===0){
+        html = `<div class="answer-head">Working</div><div>Just use the tile <strong>${result.value}</strong> on its own.</div>`;
+      } else {
+        const headline = result.diff===0
+          ? `<span class="exact">Exact! ${set.target}</span>`
+          : `<span class="miss">Closest: ${result.value}</span> (target was ${set.target}, off by ${result.diff})`;
+        html = `<div class="answer-head">Working</div><div>${result.steps.join('<br/>')}</div><div style="margin-top:8px;">${headline}</div>`;
+      }
+      answerBox.innerHTML = html;
+      puzzleCard.classList.add('revealed');
+    });
+
+    function resetTimer(){
+      clearInterval(intervalId);
+      intervalId = null;
+      timerDisplay.textContent = String(timerLength);
+      timerDisplay.dataset.seconds = String(timerLength);
+      timerDisplay.classList.remove('ticking','done');
+      timerBtn.textContent = `Start ${timerLength}s`;
+      timerBtn.dataset.state = 'idle';
+    }
+
+    function tick(){
+      let s = Number(timerDisplay.dataset.seconds) - 1;
+      timerDisplay.dataset.seconds = String(s);
+      timerDisplay.textContent = String(s);
+      if(s<=5 && s>0){ timerDisplay.classList.add('ticking'); }
+      if(s<=0){
+        clearInterval(intervalId);
+        intervalId = null;
+        timerDisplay.textContent = "Time!";
+        timerDisplay.classList.remove('ticking');
+        timerDisplay.classList.add('done');
+        timerBtn.textContent = 'Reset';
+        timerBtn.dataset.state = 'done';
+      }
+    }
+
+    timerBtn.addEventListener('click', ()=>{
+      if(timerBtn.dataset.state === 'idle'){
+        timerBtn.textContent = 'Reset';
+        timerBtn.dataset.state = 'running';
+        intervalId = setInterval(tick, 1000);
+      } else {
+        resetTimer();
+      }
+    });
+  }
+
+  function newRound(){
+    currentSet = { tiles: drawTiles(largeCount), target: randomTarget(), largeCount };
+    renderCard(currentSet);
+  }
+
+  largeToggle.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    Array.from(largeToggle.children).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    largeCount = Number(btn.dataset.large);
+    updateHelper();
+    newRound();
+  });
+
+  timerToggle.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    Array.from(timerToggle.children).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    timerLength = Number(btn.dataset.secs);
+    if(currentSet){ renderCard(currentSet); } else { newRound(); }
+  });
+
+  newBtn.addEventListener('click', newRound);
+
+  updateHelper();
+  newRound();
+
+})();
+</script>
+
+</body>
+</html>
