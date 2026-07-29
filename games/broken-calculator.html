@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Broken Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --chalkboard: #24402f;
+    --chalkboard-dark: #172c20;
+    --chalk-white: #ece7d6;
+    --chalk-dim: #b9c2ac;
+    --paper: #fbf8ef;
+    --paper-line: #ddd3ae;
+    --ink: #2b2b28;
+    --ink-soft: #6b6355;
+    --wood: #6b4a34;
+    --focus: #8fb8d6;
+    --gold: #e3b23c;
+    --gold-dark: #93701f;
+    --hard: #c1594a;
+    --hard-dark: #7c3527;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--chalkboard);
+    color: var(--chalk-white);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.03), transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(255,255,255,0.03), transparent 60%);
+    padding: 28px 16px 60px;
+  }
+
+  .board {
+    max-width: 640px;
+    margin: 0 auto;
+    border: 10px solid var(--wood);
+    border-radius: 14px;
+    padding: 36px 32px 44px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35), inset 0 0 60px rgba(0,0,0,0.25);
+    background: var(--chalkboard);
+  }
+
+  .back-link {
+    display: inline-block;
+    font-family: 'Caveat', cursive;
+    font-size: 1.15rem;
+    color: var(--chalk-dim);
+    text-decoration: none;
+    margin-bottom: 8px;
+    transition: color 0.15s ease;
+  }
+  .back-link:hover, .back-link:focus-visible { color: var(--chalk-white); }
+
+  header { text-align: center; margin-bottom: 30px; }
+
+  header h1 {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: clamp(2.6rem, 6vw, 4rem);
+    margin: 0;
+    color: var(--chalk-white);
+    text-shadow: 0 0 1px rgba(236,231,214,0.4);
+    letter-spacing: 0.5px;
+  }
+
+  header p {
+    font-family: 'Caveat', cursive;
+    font-size: 1.35rem;
+    color: var(--chalk-dim);
+    margin: 4px 0 0;
+  }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    text-align: center;
+  }
+
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 26px;
+    background: #c7bfa3;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+
+  .panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a8266;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .segmented {
+    display: inline-flex;
+    justify-content: center;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .segmented button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 9px 16px;
+    border: none;
+    background: #fffdf7;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .segmented button + button { border-left: 1.5px solid var(--paper-line); }
+  .segmented button.active { background: var(--ink); color: var(--paper); }
+
+  .new-btn {
+    display: block;
+    margin: 18px auto 0;
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.03em;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+    transition: transform 0.08s ease;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  /* ---- calculator ---- */
+  .calc-wrap { margin-top: 34px; }
+
+  .calc {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 22px 22px 26px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.32);
+  }
+
+  .target-line {
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.4rem;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+  .target-line strong { color: var(--ink); font-family: 'Space Mono', monospace; font-size: 1.1rem; }
+
+  .screen {
+    background: var(--chalkboard-dark);
+    border: 3px solid #0f1e15;
+    border-radius: 8px;
+    padding: 16px 18px;
+    text-align: right;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+    margin-bottom: 18px;
+  }
+  .screen .value {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 2.6rem;
+    color: #ff8a5c;
+    text-shadow: 0 0 8px rgba(255,138,92,0.65);
+    line-height: 1.1;
+  }
+  .screen .presses {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #c98868;
+    margin-top: 4px;
+  }
+
+  .btn-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .op-btn {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1.3rem;
+    padding: 14px 22px;
+    border: 2px solid var(--ink);
+    border-radius: 9px;
+    background: var(--gold);
+    color: var(--gold-dark);
+    border-color: var(--gold-dark);
+    cursor: pointer;
+    transition: transform 0.06s ease;
+  }
+  .op-btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .op-btn:disabled {
+    background: #e3ddc9;
+    color: #a49c86;
+    border-color: #c9c1a6;
+    cursor: not-allowed;
+  }
+
+  .util-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ghost-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .history {
+    margin-top: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    text-align: center;
+    min-height: 1.2em;
+  }
+
+  .win-banner {
+    display: none;
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.7rem;
+    color: var(--gold-dark);
+    margin-top: 14px;
+  }
+  .win-banner.show { display: block; }
+
+  .solution {
+    display: none;
+    margin-top: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.6;
+  }
+  .solution.show { display: block; }
+
+  footer {
+    text-align: center;
+    color: var(--chalk-dim);
+    font-size: 0.78rem;
+    margin-top: 34px;
+  }
+
+  @media (max-width: 560px) {
+    .board { padding: 24px 16px 34px; }
+    .op-btn { font-size: 1.1rem; padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All activities</a>
+  <header>
+    <h1>Broken Calculator</h1>
+    <p>only a couple of buttons work — get to the target anyway</p>
+  </header>
+
+  <div class="panel">
+    <div class="field">
+      <label>How many buttons work</label>
+      <div class="segmented" id="buttonCountToggle">
+        <button type="button" data-count="2" class="active">2</button>
+        <button type="button" data-count="3">3</button>
+      </div>
+    </div>
+    <button type="button" class="new-btn" id="newBtn">New puzzle</button>
+  </div>
+
+  <div class="calc-wrap">
+    <div class="calc">
+      <div class="target-line">Get to <strong id="targetValue">-</strong></div>
+      <div class="screen">
+        <div class="value" id="screenValue">0</div>
+        <div class="presses" id="pressesLabel">0 presses</div>
+      </div>
+      <div class="btn-row" id="btnRow"></div>
+      <div class="util-row">
+        <button type="button" class="ghost-btn" id="resetBtn">Reset to start</button>
+        <button type="button" class="ghost-btn" id="solveBtn">Reveal shortest solution</button>
+      </div>
+      <div class="history" id="historyLine"></div>
+      <div class="win-banner" id="winBanner"></div>
+      <div class="solution" id="solutionBox"></div>
+    </div>
+  </div>
+
+  <footer>Press the working buttons to change the number on screen. Reach the target in as few presses as you can.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const MIN_VAL = 0;
+  const MAX_VAL = 999;
+
+  const OP_POOL = [
+    { label:'+1', apply:v=>v+1 }, { label:'+2', apply:v=>v+2 }, { label:'+3', apply:v=>v+3 },
+    { label:'+4', apply:v=>v+4 }, { label:'+5', apply:v=>v+5 }, { label:'+9', apply:v=>v+9 },
+    { label:'+10', apply:v=>v+10 }, { label:'+20', apply:v=>v+20 },
+    { label:'−1', apply:v=>v-1 }, { label:'−2', apply:v=>v-2 }, { label:'−3', apply:v=>v-3 },
+    { label:'−5', apply:v=>v-5 }, { label:'−9', apply:v=>v-9 }, { label:'−10', apply:v=>v-10 },
+    { label:'×2', apply:v=>v*2 }, { label:'×3', apply:v=>v*3 }, { label:'×5', apply:v=>v*5 },
+    { label:'÷2', apply:v=>v%2===0 ? v/2 : null },
+    { label:'÷3', apply:v=>v%3===0 ? v/3 : null },
+    { label:'÷5', apply:v=>v%5===0 ? v/5 : null }
+  ];
+
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t=arr[i]; arr[i]=arr[j]; arr[j]=t;
+    }
+    return arr;
+  }
+
+  function inRange(v){ return v!==null && v>=MIN_VAL && v<=MAX_VAL; }
+
+  /* Breadth-first search over the small operation set to find distances
+     from a start value, then pick a target a satisfying number of moves
+     away and remember the exact shortest path to it. */
+  function bfs(start, ops){
+    const dist = new Map([[start, 0]]);
+    const prev = new Map();
+    let frontier = [start];
+    let depth = 0;
+    while(frontier.length && depth < 8){
+      const next = [];
+      for(const v of frontier){
+        for(const op of ops){
+          const nv = op.apply(v);
+          if(!inRange(nv) || dist.has(nv)) continue;
+          dist.set(nv, depth+1);
+          prev.set(nv, { from:v, op });
+          next.push(nv);
+        }
+      }
+      frontier = next;
+      depth++;
+    }
+    return { dist, prev };
+  }
+
+  function pathTo(prev, target){
+    const steps = [];
+    let cur = target;
+    while(prev.has(cur)){
+      const { from, op } = prev.get(cur);
+      steps.unshift({ from, op, to:cur });
+      cur = from;
+    }
+    return steps;
+  }
+
+  function generatePuzzle(opCount){
+    for(let attempt=0; attempt<40; attempt++){
+      const ops = shuffle(OP_POOL.slice()).slice(0, opCount);
+      const start = Math.floor(Math.random()*31);
+      const { dist, prev } = bfs(start, ops);
+      const candidates = Array.from(dist.entries()).filter(([v,d])=>d>=3 && d<=6 && v!==start);
+      if(candidates.length===0) continue;
+      const [target] = candidates[Math.floor(Math.random()*candidates.length)];
+      return { ops, start, target, solution: pathTo(prev, target) };
+    }
+    // fallback: guaranteed-solvable trivial puzzle
+    const ops = [OP_POOL[0], OP_POOL[1]];
+    return { ops, start:0, target:3, solution:[{from:0,op:ops[0],to:1},{from:1,op:ops[0],to:2},{from:2,op:ops[0],to:3}] };
+  }
+
+  /* ---------------- UI wiring ---------------- */
+  const buttonCountToggle = document.getElementById('buttonCountToggle');
+  const newBtn = document.getElementById('newBtn');
+  const targetValue = document.getElementById('targetValue');
+  const screenValue = document.getElementById('screenValue');
+  const pressesLabel = document.getElementById('pressesLabel');
+  const btnRow = document.getElementById('btnRow');
+  const resetBtn = document.getElementById('resetBtn');
+  const solveBtn = document.getElementById('solveBtn');
+  const historyLine = document.getElementById('historyLine');
+  const winBanner = document.getElementById('winBanner');
+  const solutionBox = document.getElementById('solutionBox');
+
+  let opCount = 2;
+  let puzzle = null;
+  let current = 0;
+  let presses = 0;
+  let history = [];
+  let won = false;
+
+  function renderButtons(){
+    btnRow.innerHTML = '';
+    puzzle.ops.forEach(op=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'op-btn';
+      b.textContent = op.label;
+      const nv = op.apply(current);
+      b.disabled = won || !inRange(nv);
+      b.addEventListener('click', ()=> press(op));
+      btnRow.appendChild(b);
+    });
+  }
+
+  function updateScreen(){
+    screenValue.textContent = current;
+    pressesLabel.textContent = `${presses} press${presses===1?'':'es'}`;
+    historyLine.textContent = history.join('  ');
+    renderButtons();
+  }
+
+  function press(op){
+    if(won) return;
+    const nv = op.apply(current);
+    if(!inRange(nv)) return;
+    history.push(`${current} ${op.label} → ${nv}`);
+    current = nv;
+    presses++;
+    if(current === puzzle.target){
+      won = true;
+      winBanner.textContent = `Solved in ${presses} press${presses===1?'':'es'}! (Shortest possible: ${puzzle.solution.length})`;
+      winBanner.classList.add('show');
+    }
+    updateScreen();
+  }
+
+  function startPuzzle(){
+    puzzle = generatePuzzle(opCount);
+    current = puzzle.start;
+    presses = 0;
+    history = [];
+    won = false;
+    winBanner.classList.remove('show');
+    winBanner.textContent = '';
+    solutionBox.classList.remove('show');
+    solutionBox.innerHTML = '';
+    targetValue.textContent = puzzle.target;
+    updateScreen();
+  }
+
+  function resetToStart(){
+    current = puzzle.start;
+    presses = 0;
+    history = [];
+    won = false;
+    winBanner.classList.remove('show');
+    winBanner.textContent = '';
+    solutionBox.classList.remove('show');
+    solutionBox.innerHTML = '';
+    updateScreen();
+  }
+
+  buttonCountToggle.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    Array.from(buttonCountToggle.children).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    opCount = Number(btn.dataset.count);
+    startPuzzle();
+  });
+
+  newBtn.addEventListener('click', startPuzzle);
+  resetBtn.addEventListener('click', resetToStart);
+
+  solveBtn.addEventListener('click', ()=>{
+    const lines = puzzle.solution.map(s=>`${s.from} ${s.op.label} → ${s.to}`);
+    solutionBox.innerHTML = `Shortest solution (${puzzle.solution.length} presses):<br/>${lines.join('<br/>')}`;
+    solutionBox.classList.add('show');
+  });
+
+  startPuzzle();
+
+})();
+</script>
+
+</body>
+</html>
