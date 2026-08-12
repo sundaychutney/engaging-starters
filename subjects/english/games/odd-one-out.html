@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Odd One Out</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 620px; }
+
+  .stat-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 26px;
+    font-family: 'Space Mono', monospace;
+  }
+  .stat { text-align: center; }
+  .stat .n { font-size: 1.6rem; font-weight: 700; color: var(--chalk-white); }
+  .stat .label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--chalk-dim); }
+
+  .word-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .word-tile {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.7rem;
+    padding: 22px 12px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.06s ease;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.28);
+  }
+  .word-tile:hover:not(:disabled) { transform: translateY(-2px); }
+  .word-tile:disabled { cursor: default; }
+  .word-tile.correct { background: var(--easy); border-color: var(--easy-dark); color: var(--easy-dark); }
+  .word-tile.wrong { background: var(--hard); border-color: var(--hard-dark); color: #fff; }
+
+  .explain-box {
+    display: none;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--chalk-dim);
+    margin-bottom: 20px;
+    padding: 0 10px;
+  }
+  .explain-box.show { display: block; }
+  .explain-box strong { color: var(--chalk-white); }
+
+  .toolbar { display: flex; justify-content: center; }
+  .new-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  @media (max-width: 560px) { .board { padding: 24px 16px 34px; } }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All English activities</a>
+  <header>
+    <h1>Odd One Out</h1>
+    <p>three words share something — which one doesn't belong?</p>
+  </header>
+
+  <div class="stat-row">
+    <div class="stat"><div class="n" id="scoreStat">0</div><div class="label">Correct</div></div>
+    <div class="stat"><div class="n" id="totalStat">0</div><div class="label">Attempted</div></div>
+  </div>
+
+  <div class="word-grid" id="wordGrid"></div>
+
+  <div class="explain-box" id="explainBox"></div>
+
+  <div class="toolbar">
+    <button type="button" class="new-btn" id="newBtn">Next round</button>
+  </div>
+
+  <footer>Click the word that doesn't share the connection the other three have.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SETS = [
+    { words:["Joyful","Content","Cheerful","Furious"], odd:"Furious", why:"“Furious” means angry — the other three all mean happy." },
+    { words:["Huge","Enormous","Gigantic","Tiny"], odd:"Tiny", why:"“Tiny” means small — the other three all mean big." },
+    { words:["Rain","Snow","Hail","Wind"], odd:"Wind", why:"Rain, snow and hail are all types of precipitation that fall from clouds. Wind is just moving air." },
+    { words:["Glance","Stare","Peek","Listen"], odd:"Listen", why:"Glance, stare and peek are all ways of looking. Listen is about hearing." },
+    { words:["Canoe","Yacht","Ferry","Glider"], odd:"Glider", why:"Canoes, yachts and ferries all travel on water. A glider travels through the air." },
+    { words:["Full stop","Question mark","Exclamation mark","Comma"], odd:"Comma", why:"A full stop, question mark and exclamation mark all end a sentence. A comma separates parts within one." },
+    { words:["Whispered","Murmured","Mumbled","Shouted"], odd:"Shouted", why:"Whispered, murmured and mumbled all mean said quietly. Shouted means said loudly — the opposite." },
+    { words:["Flock","Herd","Pack","Puddle"], odd:"Puddle", why:"Flock, herd and pack are all collective nouns for groups of animals. A puddle is a small pool of water." },
+    { words:["Terrified","Frightened","Petrified","Delighted"], odd:"Delighted", why:"Terrified, frightened and petrified all mean scared. Delighted means very pleased — the opposite feeling." },
+    { words:["Construct","Assemble","Erect","Demolish"], odd:"Demolish", why:"Construct, assemble and erect all mean to build. Demolish means to knock down — the opposite." },
+    { words:["Ancient","Antique","Aged","Modern"], odd:"Modern", why:"Ancient, antique and aged all mean old. Modern means new or recent — the opposite." },
+    { words:["Sprint","Dash","Bolt","Stroll"], odd:"Stroll", why:"Sprint, dash and bolt all mean to move quickly. Stroll means to walk slowly and casually." },
+    { words:["Intelligent","Brilliant","Bright","Foolish"], odd:"Foolish", why:"Intelligent, brilliant and bright all mean clever. Foolish means unwise — the opposite." },
+    { words:["Fable","Myth","Legend","Recipe"], odd:"Recipe", why:"A fable, myth and legend are all types of traditional story. A recipe is a set of cooking instructions." },
+    { words:["Gorgeous","Stunning","Radiant","Hideous"], odd:"Hideous", why:"Gorgeous, stunning and radiant all mean beautiful. Hideous means very ugly — the opposite." }
+  ];
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  const wordGrid = document.getElementById('wordGrid');
+  const explainBox = document.getElementById('explainBox');
+  const newBtn = document.getElementById('newBtn');
+  const scoreStat = document.getElementById('scoreStat');
+  const totalStat = document.getElementById('totalStat');
+
+  let queue = [];
+  let current = null;
+  let score = 0, total = 0;
+
+  function nextRound(){
+    if(!queue.length) queue = shuffle(SETS);
+    current = queue.pop();
+    const order = shuffle(current.words);
+    wordGrid.innerHTML = order.map(w=>`<button type="button" class="word-tile" data-w="${w}">${w}</button>`).join('');
+    explainBox.classList.remove('show');
+    explainBox.innerHTML = '';
+    Array.from(wordGrid.children).forEach(btn=>{
+      btn.addEventListener('click', ()=> answer(btn));
+    });
+  }
+
+  function answer(btn){
+    total++;
+    totalStat.textContent = total;
+    Array.from(wordGrid.children).forEach(b=> b.disabled = true);
+    if(btn.dataset.w === current.odd){
+      btn.classList.add('correct');
+      score++;
+      scoreStat.textContent = score;
+    } else {
+      btn.classList.add('wrong');
+      const correctBtn = Array.from(wordGrid.children).find(b=>b.dataset.w===current.odd);
+      if(correctBtn) correctBtn.classList.add('correct');
+    }
+    explainBox.innerHTML = `<strong>${current.odd}</strong> — ${current.why}`;
+    explainBox.classList.add('show');
+  }
+
+  newBtn.addEventListener('click', nextRound);
+
+  nextRound();
+
+})();
+</script>
+
+</body>
+</html>

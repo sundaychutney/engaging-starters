@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mystery Country</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 640px; }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 26px;
+    background: #c7bfa3;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+  .panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a8266;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .clue-list {
+    list-style: none;
+    margin: 0 0 18px;
+    padding: 0;
+    counter-reset: clue;
+  }
+  .clue-list li {
+    counter-increment: clue;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    padding: 8px 0 8px 30px;
+    position: relative;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+  .clue-list li:first-child { padding-top: 0; }
+  .clue-list li::before {
+    content: counter(clue);
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--gold-dark);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .guess-row { display: flex; gap: 10px; margin-top: 18px; }
+  .guess-input {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: #fffefa;
+    color: var(--ink);
+  }
+  .guess-input:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(143,184,214,0.3); }
+
+  .guess-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.3rem;
+    padding: 6px 22px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .guess-btn:hover { transform: translateY(-1px); }
+
+  .util-row { display: flex; justify-content: center; gap: 10px; margin-top: 16px; }
+  .ghost-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover:not(:disabled) { color: var(--ink); border-color: var(--ink); }
+  .ghost-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .wrong-log {
+    margin-top: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--hard-dark);
+    text-align: center;
+    min-height: 1.2em;
+  }
+
+  .win-banner {
+    display: none;
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.6rem;
+    color: var(--gold-dark);
+    margin-top: 16px;
+  }
+  .win-banner.show { display: block; }
+
+  .answer-box { display: none; margin-top: 14px; text-align: center; font-size: 1.1rem; color: var(--ink); font-weight: 700; }
+  .answer-box.show { display: block; }
+
+  .toolbar { display: flex; justify-content: center; margin-top: 30px; }
+  .new-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  @media (max-width: 560px) {
+    .board { padding: 24px 16px 34px; }
+    .guess-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All Humanities activities</a>
+  <header>
+    <h1>Mystery Country</h1>
+    <p>reveal clues one at a time — how few do you need?</p>
+  </header>
+
+  <div class="panel">
+    <ol class="clue-list" id="clueList"></ol>
+
+    <div class="guess-row">
+      <input type="text" class="guess-input" id="guessInput" placeholder="Type your guess…" autocomplete="off">
+      <button type="button" class="guess-btn" id="guessBtn">Guess</button>
+    </div>
+
+    <div class="util-row">
+      <button type="button" class="ghost-btn" id="clueBtn">Reveal next clue</button>
+      <button type="button" class="ghost-btn" id="giveUpBtn">Give up</button>
+    </div>
+
+    <div class="wrong-log" id="wrongLog"></div>
+    <div class="win-banner" id="winBanner"></div>
+    <div class="answer-box" id="answerBox"></div>
+  </div>
+
+  <div class="toolbar">
+    <button type="button" class="new-btn" id="newBtn">New country</button>
+  </div>
+
+  <footer>Guess the country from its clues. Fewer clues used means a better score.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const COUNTRIES = [
+    { name:"Australia", clues:[
+      "I'm entirely surrounded by ocean, and I'm both a country and a continent.",
+      "My capital is Canberra — not my biggest city.",
+      "I'm home to kangaroos, koalas, and the Great Barrier Reef.",
+      "My flag features the Southern Cross and the Union Jack."
+    ]},
+    { name:"Japan", clues:[
+      "I'm an island nation in East Asia made up of thousands of islands.",
+      "My capital is Tokyo, one of the largest cities in the world.",
+      "I'm known as the Land of the Rising Sun.",
+      "Mount Fuji is my highest and most famous peak."
+    ]},
+    { name:"Egypt", clues:[
+      "Most of my country is desert, but a great river runs through it.",
+      "My capital is Cairo.",
+      "I'm home to the Great Pyramids of Giza.",
+      "The Nile, one of the world's longest rivers, flows through me."
+    ]},
+    { name:"Brazil", clues:[
+      "I'm the largest country in South America.",
+      "My capital is Brasília, though my biggest city is Rio de Janeiro.",
+      "The Amazon rainforest covers much of my territory.",
+      "I'm the only South American country where Portuguese is the official language."
+    ]},
+    { name:"Canada", clues:[
+      "I'm the second-largest country in the world by area.",
+      "My capital is Ottawa.",
+      "I share the world's longest international border, with the USA.",
+      "My flag features a red maple leaf."
+    ]},
+    { name:"France", clues:[
+      "I'm shaped a bit like a hexagon, in Western Europe.",
+      "My capital is Paris.",
+      "A famous iron tower built in 1889 is one of my most visited landmarks.",
+      "I'm known for baguettes, croissants, and the Eiffel Tower."
+    ]},
+    { name:"India", clues:[
+      "I'm the most populous country in the world.",
+      "My capital is New Delhi.",
+      "The Taj Mahal, a famous white marble mausoleum, is in my northern city of Agra.",
+      "I'm in South Asia, where Hindi and English are both widely spoken."
+    ]},
+    { name:"South Africa", clues:[
+      "I have three capital cities.",
+      "I'm at the southern tip of the African continent.",
+      "I have 12 official languages — more than almost any other country.",
+      "Nelson Mandela was my first president elected in a fully democratic election."
+    ]},
+    { name:"New Zealand", clues:[
+      "I'm made up of two main islands in the South Pacific.",
+      "My capital is Wellington, though Auckland is my biggest city.",
+      "I'm known for dramatic mountains and being a filming location for The Lord of the Rings.",
+      "My Māori name, Aotearoa, means 'land of the long white cloud'."
+    ]},
+    { name:"Italy", clues:[
+      "I'm shaped like a boot in Southern Europe.",
+      "My capital is Rome.",
+      "I'm home to the Leaning Tower of Pisa and the ruins of the Colosseum.",
+      "Pizza and pasta both originated in me."
+    ]},
+    { name:"Mexico", clues:[
+      "I'm located in North America, south of the United States.",
+      "My capital is Mexico City, one of the most populous cities on Earth.",
+      "Ancient pyramids built by the Aztec and Maya civilisations are found within me.",
+      "Spanish is my official language."
+    ]},
+    { name:"Russia", clues:[
+      "I'm the largest country in the world by area, spanning two continents.",
+      "My capital is Moscow.",
+      "I stretch across 11 time zones.",
+      "St Basil's Cathedral, with its colourful onion domes, is one of my famous landmarks."
+    ]},
+    { name:"China", clues:[
+      "I share a border with more countries than almost any other nation.",
+      "My capital is Beijing.",
+      "The Great Wall, thousands of kilometres long, runs through my north.",
+      "I'm in East Asia, and I'm the most populous country in the world."
+    ]},
+    { name:"Germany", clues:[
+      "I'm located in Central Europe.",
+      "My capital is Berlin.",
+      "I was divided by a wall for almost 30 years during the Cold War.",
+      "I'm known for the Oktoberfest festival and for being a leading car manufacturer."
+    ]},
+    { name:"Indonesia", clues:[
+      "I'm made up of more than 17,000 islands.",
+      "My capital is Jakarta.",
+      "I'm the largest Muslim-majority country in the world.",
+      "I'm in Southeast Asia, between the Indian and Pacific Oceans."
+    ]},
+    { name:"Kenya", clues:[
+      "I'm located in East Africa, on the equator.",
+      "My capital is Nairobi.",
+      "The Great Rift Valley runs through me.",
+      "I'm famous for wildlife safaris in places like the Maasai Mara."
+    ]},
+    { name:"Greece", clues:[
+      "I'm made up of a mainland and thousands of islands in Southern Europe.",
+      "My capital is Athens.",
+      "I'm considered the birthplace of democracy and the Olympic Games.",
+      "The ancient Parthenon temple sits atop the Acropolis in my capital."
+    ]},
+    { name:"United Kingdom", clues:[
+      "I'm made up of four nations: England, Scotland, Wales, and Northern Ireland.",
+      "My capital is London.",
+      "I'm an island nation off the north-west coast of mainland Europe.",
+      "Big Ben and the Houses of Parliament are among my famous landmarks."
+    ]},
+    { name:"Argentina", clues:[
+      "I'm the second-largest country in South America.",
+      "My capital is Buenos Aires.",
+      "Tango dancing originated in me.",
+      "I'm home to part of Patagonia and the towering Andes mountains."
+    ]},
+    { name:"Iceland", clues:[
+      "I'm a small island nation near the Arctic Circle.",
+      "My capital, Reykjavik, is the world's northernmost capital of a sovereign state.",
+      "I have more active volcanoes and geothermal activity than almost anywhere else on Earth.",
+      "Despite my name, I'm covered more in green landscapes than ice — unlike my neighbour Greenland."
+    ]}
+  ];
+
+  const clueList = document.getElementById('clueList');
+  const guessInput = document.getElementById('guessInput');
+  const guessBtn = document.getElementById('guessBtn');
+  const clueBtn = document.getElementById('clueBtn');
+  const giveUpBtn = document.getElementById('giveUpBtn');
+  const wrongLog = document.getElementById('wrongLog');
+  const winBanner = document.getElementById('winBanner');
+  const answerBox = document.getElementById('answerBox');
+  const newBtn = document.getElementById('newBtn');
+
+  let current = null;
+  let cluesShown = 1;
+  let wrongGuesses = 0;
+  let done = false;
+
+  function pick(){ return COUNTRIES[Math.floor(Math.random()*COUNTRIES.length)]; }
+
+  function renderClues(){
+    clueList.innerHTML = current.clues.slice(0, cluesShown).map(c=>`<li>${c}</li>`).join('');
+    clueBtn.disabled = done || cluesShown >= current.clues.length;
+    clueBtn.textContent = cluesShown >= current.clues.length ? 'No more clues' : 'Reveal next clue';
+  }
+
+  function startRound(){
+    current = pick();
+    cluesShown = 1;
+    wrongGuesses = 0;
+    done = false;
+    wrongLog.textContent = '';
+    winBanner.classList.remove('show');
+    winBanner.textContent = '';
+    answerBox.classList.remove('show');
+    answerBox.innerHTML = '';
+    guessInput.value = '';
+    guessInput.disabled = false;
+    guessBtn.disabled = false;
+    giveUpBtn.disabled = false;
+    renderClues();
+    guessInput.focus();
+  }
+
+  function endRound(won){
+    done = true;
+    guessInput.disabled = true;
+    guessBtn.disabled = true;
+    giveUpBtn.disabled = true;
+    clueBtn.disabled = true;
+    answerBox.textContent = current.name;
+    answerBox.classList.add('show');
+    if(won){
+      winBanner.textContent = `Correct! Solved using ${cluesShown} clue${cluesShown===1?'':'s'} and ${wrongGuesses} wrong guess${wrongGuesses===1?'':'es'}.`;
+      winBanner.classList.add('show');
+    }
+  }
+
+  function submitGuess(){
+    if(done) return;
+    const guess = guessInput.value.trim();
+    if(!guess) return;
+    if(guess.toLowerCase() === current.name.toLowerCase()){
+      endRound(true);
+    } else {
+      wrongGuesses++;
+      wrongLog.textContent = `"${guess}" isn't it — try again, or reveal another clue.`;
+      guessInput.value = '';
+      guessInput.focus();
+    }
+  }
+
+  clueBtn.addEventListener('click', ()=>{
+    if(cluesShown < current.clues.length){
+      cluesShown++;
+      renderClues();
+    }
+  });
+
+  giveUpBtn.addEventListener('click', ()=> endRound(false));
+  guessBtn.addEventListener('click', submitGuess);
+  guessInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submitGuess(); });
+  newBtn.addEventListener('click', startRound);
+
+  startRound();
+
+})();
+</script>
+
+</body>
+</html>

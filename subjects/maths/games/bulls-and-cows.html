@@ -6,83 +6,8 @@
 <title>Bulls and Cows</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
 <style>
-  :root{
-    --chalkboard: #24402f;
-    --chalkboard-dark: #172c20;
-    --chalk-white: #ece7d6;
-    --chalk-dim: #b9c2ac;
-    --paper: #fbf8ef;
-    --paper-line: #ddd3ae;
-    --ink: #2b2b28;
-    --ink-soft: #6b6355;
-    --wood: #6b4a34;
-    --focus: #8fb8d6;
-    --gold: #e3b23c;
-    --gold-dark: #93701f;
-    --hard: #c1594a;
-    --hard-dark: #7c3527;
-    --radius: 10px;
-  }
-
-  * { box-sizing: border-box; }
-
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--chalkboard);
-    color: var(--chalk-white);
-    font-family: 'Inter', system-ui, sans-serif;
-    min-height: 100vh;
-  }
-
-  body {
-    background-image:
-      radial-gradient(ellipse at top left, rgba(255,255,255,0.03), transparent 60%),
-      radial-gradient(ellipse at bottom right, rgba(255,255,255,0.03), transparent 60%);
-    padding: 28px 16px 60px;
-  }
-
-  .board {
-    max-width: 640px;
-    margin: 0 auto;
-    border: 10px solid var(--wood);
-    border-radius: 14px;
-    padding: 36px 32px 44px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.35), inset 0 0 60px rgba(0,0,0,0.25);
-    background: var(--chalkboard);
-  }
-
-  .back-link {
-    display: inline-block;
-    font-family: 'Caveat', cursive;
-    font-size: 1.15rem;
-    color: var(--chalk-dim);
-    text-decoration: none;
-    margin-bottom: 8px;
-    transition: color 0.15s ease;
-  }
-  .back-link:hover, .back-link:focus-visible { color: var(--chalk-white); }
-
-  header { text-align: center; margin-bottom: 30px; }
-
-  header h1 {
-    font-family: 'Caveat', cursive;
-    font-weight: 700;
-    font-size: clamp(2.6rem, 6vw, 4rem);
-    margin: 0;
-    color: var(--chalk-white);
-    text-shadow: 0 0 1px rgba(236,231,214,0.4);
-    letter-spacing: 0.5px;
-  }
-
-  header p {
-    font-family: 'Caveat', cursive;
-    font-size: 1.35rem;
-    color: var(--chalk-dim);
-    margin: 4px 0 0;
-  }
-
   .panel {
     background: var(--paper);
     color: var(--ink);
@@ -287,13 +212,6 @@
     margin-top: 14px;
   }
   .win-banner.show { display: block; }
-
-  footer {
-    text-align: center;
-    color: var(--chalk-dim);
-    font-size: 0.78rem;
-    margin-top: 34px;
-  }
 
   @media (max-width: 560px) {
     .board { padding: 24px 16px 34px; }

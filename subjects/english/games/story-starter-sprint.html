@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Story Starter Sprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 680px; }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    text-align: center;
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 26px;
+    background: #c7bfa3;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+  .panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a8266;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .prompt-box {
+    font-family: 'Caveat', cursive;
+    font-size: 1.55rem;
+    line-height: 1.45;
+    color: var(--ink);
+    background: #fffefa;
+    border: 2px dashed var(--paper-line);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin-bottom: 20px;
+    min-height: 3.2em;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .segmented {
+    display: inline-flex;
+    justify-content: center;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .segmented button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 9px 15px;
+    border: none;
+    background: #fffdf7;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .segmented button + button { border-left: 1.5px solid var(--paper-line); }
+  .segmented button.active { background: var(--ink); color: var(--paper); }
+
+  .btn-row { display: flex; justify-content: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .new-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  .timer-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1.5px dashed var(--paper-line);
+  }
+  .timer-display {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 2rem;
+    min-width: 2.6em;
+    text-align: center;
+    color: var(--ink);
+  }
+  .timer-display.ticking { color: var(--hard-dark); }
+  .timer-display.done { color: var(--hard); }
+  .timer-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 16px;
+    cursor: pointer;
+  }
+  .timer-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  @media (max-width: 560px) { .board { padding: 24px 16px 34px; } }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All English activities</a>
+  <header>
+    <h1>Story Starter Sprint</h1>
+    <p>a random prompt, a countdown, and a blank page</p>
+  </header>
+
+  <div class="panel">
+    <div class="prompt-box" id="promptBox"></div>
+
+    <div class="field">
+      <label>Writing time</label>
+      <div class="segmented" id="timerToggle">
+        <button type="button" data-secs="120">2 min</button>
+        <button type="button" data-secs="300" class="active">5 min</button>
+        <button type="button" data-secs="600">10 min</button>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="new-btn" id="newBtn">New prompt</button>
+    </div>
+
+    <div class="timer-row">
+      <span class="timer-display" data-seconds="300" id="timerDisplay">5:00</span>
+      <button type="button" class="timer-btn" id="timerBtn" data-state="idle">Start writing</button>
+    </div>
+  </div>
+
+  <footer>No planning, no stopping — just write until the timer runs out. It doesn't have to be good, it just has to keep going.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const CHARACTERS = [
+    "a nervous new student","a retired superhero","a talking cat","an alien exchange student",
+    "a time-travelling librarian","a pirate captain lost in the city","a robot learning to paint",
+    "a young inventor","a grumpy wizard","a detective who's afraid of the dark",
+    "a girl who can hear plants talk","a boy who just found a mysterious key"
+  ];
+
+  const SETTINGS = [
+    "in an abandoned theme park","during the last day of school","on a train that never stops",
+    "in a house with too many doors","at the bottom of the ocean","in a library that only appears at midnight",
+    "on a spaceship with one working engine","in a town where it never stops raining",
+    "backstage at the world's biggest concert","in a forest that moves overnight"
+  ];
+
+  const TWISTS = [
+    "when the lights suddenly go out.","and discovers a note that isn't theirs.",
+    "when everyone else disappears without warning.","and hears a voice calling their name.",
+    "when the ground starts to shake.","and finds a door that wasn't there yesterday.",
+    "when their phone starts receiving messages from tomorrow.","and realises they've been here before.",
+    "when a stranger hands them a locked box.","and the clock starts running backwards."
+  ];
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  const promptBox = document.getElementById('promptBox');
+  const timerToggle = document.getElementById('timerToggle');
+  const newBtn = document.getElementById('newBtn');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const timerBtn = document.getElementById('timerBtn');
+
+  let timerLength = 300;
+  let intervalId = null;
+
+  function formatTime(s){
+    const m = Math.floor(s/60);
+    const sec = s%60;
+    return `${m}:${String(sec).padStart(2,'0')}`;
+  }
+
+  function newPrompt(){
+    const text = `${cap(pick(CHARACTERS))}, ${pick(SETTINGS)}, ${pick(TWISTS)}`;
+    promptBox.textContent = text;
+  }
+
+  function resetTimer(){
+    clearInterval(intervalId);
+    intervalId = null;
+    timerDisplay.textContent = formatTime(timerLength);
+    timerDisplay.dataset.seconds = String(timerLength);
+    timerDisplay.classList.remove('ticking','done');
+    timerBtn.textContent = 'Start writing';
+    timerBtn.dataset.state = 'idle';
+  }
+
+  function tick(){
+    let s = Number(timerDisplay.dataset.seconds) - 1;
+    timerDisplay.dataset.seconds = String(s);
+    timerDisplay.textContent = formatTime(Math.max(s,0));
+    if(s<=10 && s>0){ timerDisplay.classList.add('ticking'); }
+    if(s<=0){
+      clearInterval(intervalId);
+      intervalId = null;
+      timerDisplay.textContent = "Time!";
+      timerDisplay.classList.remove('ticking');
+      timerDisplay.classList.add('done');
+      timerBtn.textContent = 'Reset';
+      timerBtn.dataset.state = 'done';
+    }
+  }
+
+  timerBtn.addEventListener('click', ()=>{
+    if(timerBtn.dataset.state === 'idle'){
+      timerBtn.textContent = 'Reset';
+      timerBtn.dataset.state = 'running';
+      intervalId = setInterval(tick, 1000);
+    } else {
+      resetTimer();
+    }
+  });
+
+  timerToggle.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    Array.from(timerToggle.children).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    timerLength = Number(btn.dataset.secs);
+    resetTimer();
+  });
+
+  newBtn.addEventListener('click', newPrompt);
+
+  newPrompt();
+  resetTimer();
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Unit Conversion Sprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 920px; }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 26px;
+    background: #c7bfa3;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+  .panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a8266;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .field-row { display: flex; gap: 22px; margin-bottom: 4px; flex-wrap: wrap; justify-content: center; }
+  .field { flex: 1; min-width: 180px; }
+  .field label {
+    display: block;
+    text-align: center;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .segmented {
+    display: flex;
+    justify-content: center;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 6px;
+    overflow: hidden;
+    width: fit-content;
+    margin: 0 auto;
+  }
+  .segmented button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 8px 13px;
+    border: none;
+    background: #fffdf7;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .segmented button + button { border-left: 1.5px solid var(--paper-line); }
+  .segmented button.active { background: var(--ink); color: var(--paper); }
+
+  .new-btn {
+    display: block;
+    margin: 18px auto 0;
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  .timer-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1.5px dashed var(--paper-line);
+  }
+  .timer-display {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1.8rem;
+    min-width: 2.2em;
+    text-align: center;
+    color: var(--ink);
+  }
+  .timer-display.ticking { color: var(--hard-dark); }
+  .timer-display.done { color: var(--hard); }
+  .timer-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 16px;
+    cursor: pointer;
+  }
+  .timer-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .results { margin-top: 34px; }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 16px;
+  }
+  .q-card {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    padding: 16px 14px 14px;
+    text-align: center;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+    background-image: repeating-linear-gradient(to bottom, transparent, transparent 27px, var(--paper-line) 28px);
+  }
+  .q-card .question {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .reveal-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 5px 12px;
+    cursor: pointer;
+  }
+  .reveal-btn:hover { color: var(--ink); border-color: var(--ink); }
+  .answer {
+    display: none;
+    margin-top: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .q-card.revealed .answer { display: block; }
+  .q-card.revealed .reveal-btn { display: none; }
+
+  @media (max-width: 560px) { .board { padding: 24px 16px 34px; } }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All Science activities</a>
+  <header>
+    <h1>Unit Conversion Sprint</h1>
+    <p>race the clock, convert the units</p>
+  </header>
+
+  <div class="panel">
+    <div class="field-row">
+      <div class="field">
+        <label>Category</label>
+        <div class="segmented" id="categoryToggle">
+          <button type="button" data-cat="length" class="active">Length</button>
+          <button type="button" data-cat="mass">Mass</button>
+          <button type="button" data-cat="volume">Volume</button>
+          <button type="button" data-cat="time">Time</button>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="new-btn" id="newBtn">New round (6 questions)</button>
+
+    <div class="timer-row">
+      <span class="timer-display" data-seconds="60" id="timerDisplay">60</span>
+      <button type="button" class="timer-btn" id="timerBtn" data-state="idle">Start 60s</button>
+    </div>
+  </div>
+
+  <div class="results">
+    <div class="card-grid" id="cardGrid"></div>
+  </div>
+
+  <footer>Work out each conversion, then reveal to check. Remember: going to a smaller unit means multiplying, going to a bigger unit means dividing.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const UNITS = {
+    length: [ {u:'mm',f:1}, {u:'cm',f:10}, {u:'m',f:1000}, {u:'km',f:1000000} ],
+    mass:   [ {u:'mg',f:1}, {u:'g',f:1000}, {u:'kg',f:1000000} ],
+    volume: [ {u:'mL',f:1}, {u:'L',f:1000} ],
+    time:   [ {u:'s',f:1}, {u:'min',f:60}, {u:'hr',f:3600} ]
+  };
+
+  function randomQuestion(category){
+    const units = UNITS[category];
+    const i = Math.floor(Math.random()*units.length);
+    const neighbours = [i-1, i+1].filter(n => n>=0 && n<units.length);
+    const j = neighbours[Math.floor(Math.random()*neighbours.length)];
+    const from = units[i], to = units[j];
+
+    let amount = Math.floor(Math.random()*49)+1;
+    if(Math.random()<0.35) amount = Math.round((amount/2))*0.5;
+
+    const base = amount*from.f;
+    let result = base/to.f;
+    result = Math.round(result*1000)/1000;
+
+    const ratio = from.f/to.f;
+    let working;
+    if(ratio >= 1){
+      working = `${amount} ${from.u} &times; ${ratio} = ${result} ${to.u}`;
+    } else {
+      working = `${amount} ${from.u} &divide; ${to.f/from.f} = ${result} ${to.u}`;
+    }
+
+    return { question:`${amount} ${from.u} = ___ ${to.u}`, answer:`${result} ${to.u}`, working };
+  }
+
+  const categoryToggle = document.getElementById('categoryToggle');
+  const newBtn = document.getElementById('newBtn');
+  const cardGrid = document.getElementById('cardGrid');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const timerBtn = document.getElementById('timerBtn');
+
+  let category = 'length';
+  let intervalId = null;
+  const TIMER_LEN = 60;
+
+  function renderRound(){
+    cardGrid.innerHTML = '';
+    for(let i=0;i<6;i++){
+      const q = randomQuestion(category);
+      const card = document.createElement('div');
+      card.className = 'q-card';
+      card.innerHTML = `
+        <div class="question">${q.question}</div>
+        <button type="button" class="reveal-btn">Reveal answer</button>
+        <div class="answer">${q.working}</div>
+      `;
+      card.querySelector('.reveal-btn').addEventListener('click', ()=> card.classList.add('revealed'));
+      cardGrid.appendChild(card);
+    }
+  }
+
+  function resetTimer(){
+    clearInterval(intervalId);
+    intervalId = null;
+    timerDisplay.textContent = String(TIMER_LEN);
+    timerDisplay.dataset.seconds = String(TIMER_LEN);
+    timerDisplay.classList.remove('ticking','done');
+    timerBtn.textContent = `Start ${TIMER_LEN}s`;
+    timerBtn.dataset.state = 'idle';
+  }
+
+  function tick(){
+    let s = Number(timerDisplay.dataset.seconds) - 1;
+    timerDisplay.dataset.seconds = String(s);
+    timerDisplay.textContent = String(s);
+    if(s<=10 && s>0){ timerDisplay.classList.add('ticking'); }
+    if(s<=0){
+      clearInterval(intervalId);
+      intervalId = null;
+      timerDisplay.textContent = 'Time!';
+      timerDisplay.classList.remove('ticking');
+      timerDisplay.classList.add('done');
+      timerBtn.textContent = 'Reset';
+      timerBtn.dataset.state = 'done';
+    }
+  }
+
+  timerBtn.addEventListener('click', ()=>{
+    if(timerBtn.dataset.state === 'idle'){
+      timerBtn.textContent = 'Reset';
+      timerBtn.dataset.state = 'running';
+      intervalId = setInterval(tick, 1000);
+    } else {
+      resetTimer();
+    }
+  });
+
+  categoryToggle.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    Array.from(categoryToggle.children).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    category = btn.dataset.cat;
+    renderRound();
+  });
+
+  newBtn.addEventListener('click', ()=>{
+    renderRound();
+    resetTimer();
+  });
+
+  renderRound();
+  resetTimer();
+
+})();
+</script>
+
+</body>
+</html>
