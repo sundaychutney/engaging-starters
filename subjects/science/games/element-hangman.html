@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Element Hangman</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 640px; }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(36,27,24,0.04);
+  }
+
+  .figure-wrap { display: flex; justify-content: center; margin-top: 6px; margin-bottom: 6px; }
+  .figure-wrap svg { width: 140px; height: 150px; }
+  .figure-wrap .part { opacity: 0; transition: opacity 0.15s ease; }
+  .figure-wrap .part.show { opacity: 1; }
+
+  .word-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 18px 0;
+  }
+  .letter-box {
+    width: 30px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 3px solid var(--ink);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+  }
+
+  .keyboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .key-btn {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 8px 0;
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+    transition: transform 0.06s ease, border-color 0.12s ease;
+  }
+  .key-btn:hover:not(:disabled) { transform: translateY(-1px); border-color: var(--science); }
+  .key-btn:disabled { cursor: not-allowed; opacity: 0.4; }
+  .key-btn.correct { background: var(--easy); border-color: var(--easy-dark); color: var(--easy-dark); opacity: 1; }
+  .key-btn.wrong { background: var(--hard); border-color: var(--hard-dark); color: #fff; opacity: 1; }
+
+  .status-row { text-align: center; margin-top: 16px; font-size: 0.85rem; color: var(--ink-soft); min-height: 1.2em; }
+
+  .win-banner, .lose-banner {
+    display: none;
+    text-align: center;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-top: 14px;
+  }
+  .win-banner { color: var(--science-dark); }
+  .lose-banner { color: var(--hard-dark); }
+  .win-banner.show, .lose-banner.show { display: block; }
+
+  .fact-box { display: none; text-align: center; margin-top: 8px; font-size: 0.85rem; color: var(--ink-soft); }
+  .fact-box.show { display: block; }
+
+  .toolbar { display: flex; justify-content: center; margin-top: 26px; }
+  .new-btn {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 10px;
+    background: var(--brand);
+    color: #fff;
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  @media (max-width: 560px) {
+    .board { padding: 24px 16px 34px; }
+    .keyboard { grid-template-columns: repeat(auto-fill, minmax(26px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All Science activities</a>
+  <header>
+    <h1>Element Hangman</h1>
+    <p>guess the element before the diagram is complete</p>
+  </header>
+
+  <div class="panel">
+    <div class="figure-wrap">
+      <svg viewBox="0 0 140 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <line x1="10" y1="140" x2="70" y2="140" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        <line x1="30" y1="140" x2="30" y2="10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        <line x1="30" y1="10" x2="95" y2="10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        <line x1="95" y1="10" x2="95" y2="26" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        <circle class="part" id="part-head" cx="95" cy="40" r="14" fill="none" stroke="var(--hard-dark)" stroke-width="4"/>
+        <line class="part" id="part-body" x1="95" y1="54" x2="95" y2="95" stroke="var(--hard-dark)" stroke-width="4" stroke-linecap="round"/>
+        <line class="part" id="part-arm-l" x1="95" y1="65" x2="75" y2="85" stroke="var(--hard-dark)" stroke-width="4" stroke-linecap="round"/>
+        <line class="part" id="part-arm-r" x1="95" y1="65" x2="115" y2="85" stroke="var(--hard-dark)" stroke-width="4" stroke-linecap="round"/>
+        <line class="part" id="part-leg-l" x1="95" y1="95" x2="78" y2="122" stroke="var(--hard-dark)" stroke-width="4" stroke-linecap="round"/>
+        <line class="part" id="part-leg-r" x1="95" y1="95" x2="112" y2="122" stroke="var(--hard-dark)" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <div class="word-row" id="wordRow"></div>
+
+    <div class="keyboard" id="keyboard"></div>
+
+    <div class="status-row" id="statusRow">Pick a letter to begin.</div>
+    <div class="win-banner" id="winBanner"></div>
+    <div class="lose-banner" id="loseBanner"></div>
+    <div class="fact-box" id="factBox"></div>
+  </div>
+
+  <div class="toolbar">
+    <button type="button" class="new-btn" id="newBtn" disabled>Loading elements…</button>
+  </div>
+
+  <footer>All 118 elements of the periodic table. Six wrong guesses and the diagram is complete.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const DATA_URL = '../../../assets/data/elements.json';
+  const MAX_WRONG = 6;
+  const PARTS = ['part-head','part-body','part-arm-l','part-arm-r','part-leg-l','part-leg-r'];
+
+  const wordRow = document.getElementById('wordRow');
+  const keyboard = document.getElementById('keyboard');
+  const statusRow = document.getElementById('statusRow');
+  const winBanner = document.getElementById('winBanner');
+  const loseBanner = document.getElementById('loseBanner');
+  const factBox = document.getElementById('factBox');
+  const newBtn = document.getElementById('newBtn');
+
+  let elements = [];
+  let queue = [];
+  let current = null;
+  let guessed = new Set();
+  let wrongCount = 0;
+  let done = false;
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  function renderWord(){
+    const letters = current.name.toUpperCase().split('');
+    wordRow.innerHTML = letters.map(ch => {
+      if(ch === ' ' || ch === '-'){
+        return `<div class="letter-box" style="border-bottom:none;">${ch}</div>`;
+      }
+      const shown = guessed.has(ch) || done;
+      return `<div class="letter-box">${shown ? ch : ''}</div>`;
+    }).join('');
+  }
+
+  function renderFigure(){
+    PARTS.forEach((id, i) => {
+      document.getElementById(id).classList.toggle('show', i < wrongCount);
+    });
+  }
+
+  function buildKeyboard(){
+    keyboard.innerHTML = '';
+    for(let i=0; i<26; i++){
+      const ch = String.fromCharCode(65+i);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'key-btn';
+      btn.textContent = ch;
+      btn.dataset.letter = ch;
+      btn.addEventListener('click', () => guessLetter(ch, btn));
+      keyboard.appendChild(btn);
+    }
+  }
+
+  function isWordComplete(){
+    return current.name.toUpperCase().split('').every(ch => ch === ' ' || ch === '-' || guessed.has(ch));
+  }
+
+  function guessLetter(ch, btn){
+    if(done || guessed.has(ch)) return;
+    guessed.add(ch);
+    btn.disabled = true;
+    if(current.name.toUpperCase().includes(ch)){
+      btn.classList.add('correct');
+      renderWord();
+      if(isWordComplete()) endRound(true);
+    } else {
+      btn.classList.add('wrong');
+      wrongCount++;
+      renderFigure();
+      statusRow.textContent = `"${ch}" isn't in this element's name.`;
+      if(wrongCount >= MAX_WRONG) endRound(false);
+    }
+  }
+
+  function endRound(won){
+    done = true;
+    Array.from(keyboard.children).forEach(b => b.disabled = true);
+    renderWord();
+    factBox.textContent = `${current.name} (${current.symbol}) — ${current.category}.`;
+    factBox.classList.add('show');
+    if(won){
+      statusRow.textContent = '';
+      winBanner.textContent = `Solved it with ${MAX_WRONG - wrongCount} guess${MAX_WRONG-wrongCount===1?'':'es'} to spare!`;
+      winBanner.classList.add('show');
+    } else {
+      statusRow.textContent = '';
+      loseBanner.textContent = `Out of guesses — it was ${current.name}.`;
+      loseBanner.classList.add('show');
+    }
+  }
+
+  function startRound(){
+    if(!queue.length) queue = shuffle(elements);
+    current = queue.pop();
+    guessed = new Set();
+    wrongCount = 0;
+    done = false;
+    statusRow.textContent = 'Pick a letter to begin.';
+    winBanner.classList.remove('show');
+    winBanner.textContent = '';
+    loseBanner.classList.remove('show');
+    loseBanner.textContent = '';
+    factBox.classList.remove('show');
+    factBox.textContent = '';
+    buildKeyboard();
+    renderWord();
+    renderFigure();
+  }
+
+  newBtn.addEventListener('click', startRound);
+
+  fetch(DATA_URL)
+    .then(r => r.json())
+    .then(data => {
+      elements = data;
+      queue = shuffle(elements);
+      newBtn.disabled = false;
+      newBtn.textContent = 'New element';
+      startRound();
+    })
+    .catch(() => {
+      statusRow.textContent = "Couldn't load element data.";
+    });
+
+})();
+</script>
+
+</body>
+</html>
