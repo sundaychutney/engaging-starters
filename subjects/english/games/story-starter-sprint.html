@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Story Starter Sprint</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../../style.css">
 <style>
   .board { max-width: 680px; }
@@ -13,41 +13,18 @@
   .panel {
     background: var(--paper);
     color: var(--ink);
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
     margin: 0 auto;
     padding: 26px 28px 22px;
     position: relative;
-    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    box-shadow: 0 1px 2px rgba(36,27,24,0.04);
     text-align: center;
-  }
-  .panel::before {
-    content: "";
-    position: absolute;
-    top: -14px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90px;
-    height: 26px;
-    background: #c7bfa3;
-    border-radius: 3px;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-  }
-  .panel::after {
-    content: "";
-    position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #8a8266;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
   }
 
   .prompt-box {
-    font-family: 'Caveat', cursive;
-    font-size: 1.55rem;
+    font-family: 'Karla', sans-serif;
+    font-size: 1.3rem;
     line-height: 1.45;
     color: var(--ink);
     background: #fffefa;
@@ -89,14 +66,14 @@
 
   .btn-row { display: flex; justify-content: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
   .new-btn {
-    font-family: 'Caveat', cursive;
-    font-weight: 700;
-    font-size: 1.4rem;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
     padding: 9px 26px;
     border: none;
-    border-radius: 6px;
-    background: var(--ink);
-    color: var(--paper);
+    border-radius: 10px;
+    background: var(--brand);
+    color: #fff;
     cursor: pointer;
   }
   .new-btn:hover { transform: translateY(-1px); }
@@ -121,7 +98,7 @@
   .timer-display.ticking { color: var(--hard-dark); }
   .timer-display.done { color: var(--hard); }
   .timer-btn {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Karla', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--ink-soft);
