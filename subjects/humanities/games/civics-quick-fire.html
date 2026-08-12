@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Civics Quick-Fire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 640px; }
+
+  .stat-row {
+    display: flex;
+    justify-content: center;
+    gap: 26px;
+    margin-bottom: 26px;
+    font-family: 'Space Mono', monospace;
+  }
+  .stat { text-align: center; }
+  .stat .n { font-size: 1.6rem; font-weight: 700; color: var(--chalk-white); }
+  .stat .label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--chalk-dim); }
+  .stat.timer .n.ticking { color: var(--hard-dark); }
+  .stat.timer .n.done { color: var(--hard); }
+
+  .statement-card {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 26px 24px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    text-align: center;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.5rem;
+    line-height: 1.35;
+  }
+
+  .tf-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 22px;
+  }
+  .tf-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 14px 34px;
+    border: 2px solid var(--chalk-dim);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--chalk-white);
+    cursor: pointer;
+    transition: transform 0.06s ease;
+  }
+  .tf-btn:hover:not(:disabled) { transform: translateY(-2px); background: rgba(236,231,214,0.08); }
+  .tf-btn:disabled { cursor: default; }
+  .tf-btn.correct { background: var(--easy); border-color: var(--easy-dark); color: var(--easy-dark); }
+  .tf-btn.wrong { background: var(--hard); border-color: var(--hard-dark); color: #fff; }
+
+  .feedback { margin-top: 16px; font-size: 0.85rem; color: var(--chalk-dim); min-height: 2.4em; padding: 0 10px; }
+
+  .toolbar { display: flex; justify-content: center; margin-top: 24px; }
+  .new-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  .over-banner {
+    display: none;
+    margin-top: 20px;
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.8rem;
+    color: var(--chalk-white);
+  }
+  .over-banner.show { display: block; }
+
+  @media (max-width: 560px) { .board { padding: 24px 16px 34px; } }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All Humanities activities</a>
+  <header>
+    <h1>Civics Quick-Fire</h1>
+    <p>true or false — how many can you get right?</p>
+  </header>
+
+  <div class="stat-row">
+    <div class="stat"><div class="n" id="scoreStat">0</div><div class="label">Correct</div></div>
+    <div class="stat"><div class="n" id="totalStat">0</div><div class="label">Attempted</div></div>
+    <div class="stat timer"><div class="n" id="timerStat">60</div><div class="label">Seconds</div></div>
+  </div>
+
+  <div class="statement-card" id="statementCard">Press start to begin</div>
+
+  <div class="tf-row" id="tfRow">
+    <button type="button" class="tf-btn" data-a="true" disabled>True</button>
+    <button type="button" class="tf-btn" data-a="false" disabled>False</button>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+  <div class="over-banner" id="overBanner"></div>
+
+  <div class="toolbar">
+    <button type="button" class="new-btn" id="newBtn">Start round (60s)</button>
+  </div>
+
+  <footer>Covers how Australia's government works: elections, parliament, courts, and the three levels of government.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const STATEMENTS = [
+    { text:"Australia is a constitutional monarchy.", answer:true, note:"True — Australia's Head of State is the monarch, represented here by the Governor-General." },
+    { text:"Voting in federal elections is compulsory for Australian citizens 18 and over.", answer:true, note:"True — enrolling and voting are both required by law." },
+    { text:"Australia has three levels of government: federal, state/territory, and local.", answer:true, note:"True — each level has different responsibilities." },
+    { text:"The High Court of Australia is the highest court in the country.", answer:true, note:"True — it's the final court of appeal." },
+    { text:"A referendum is used to change the Australian Constitution.", answer:true, note:"True — and it needs a 'double majority' to pass." },
+    { text:"The Australian Parliament has two houses: the House of Representatives and the Senate.", answer:true, note:"True — this is called a bicameral parliament." },
+    { text:"Federal elections for the House of Representatives must be held at least every three years.", answer:true, note:"True — three years is the maximum term." },
+    { text:"Australia became a federation on 1 January 1901.", answer:true, note:"True — the six colonies united to form the Commonwealth of Australia." },
+    { text:"The Australian flag features the Union Jack and the Southern Cross.", answer:true, note:"True — plus the Commonwealth Star." },
+    { text:"Local councils look after things like rubbish collection and local roads.", answer:true, note:"True — that's local government's job." },
+    { text:"The Prime Minister is directly elected by all Australian voters nationwide.", answer:false, note:"False — the PM is the leader of the party or coalition that wins the most seats, chosen by their own party." },
+    { text:"Australia's Constitution can be changed by a simple vote in Parliament alone.", answer:false, note:"False — changing the Constitution needs a national referendum." },
+    { text:"Local councils are responsible for national defence decisions.", answer:false, note:"False — defence is a federal government responsibility." },
+    { text:"Australians directly elect their Head of State.", answer:false, note:"False — the Governor-General represents the monarch and isn't directly elected by voters." },
+    { text:"There is only one level of government in Australia.", answer:false, note:"False — there are three: federal, state/territory, and local." },
+    { text:"The Senate has no power to reject laws passed by the House of Representatives.", answer:false, note:"False — the Senate can reject or amend most bills." },
+    { text:"Any citizen can personally rewrite a law without going through Parliament.", answer:false, note:"False — laws are made and changed through Parliament." },
+    { text:"Australia has never held a referendum.", answer:false, note:"False — Australia has held several, including in 1967 and 1999." },
+    { text:"State governments have no responsibility for public schools or hospitals.", answer:false, note:"False — states play a major role in running schools and hospitals." },
+    { text:"Australia's national anthem is 'God Save the Queen/King'.", answer:false, note:"False — 'Advance Australia Fair' has been the national anthem since 1984." }
+  ];
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  const statementCard = document.getElementById('statementCard');
+  const tfRow = document.getElementById('tfRow');
+  const feedback = document.getElementById('feedback');
+  const scoreStat = document.getElementById('scoreStat');
+  const totalStat = document.getElementById('totalStat');
+  const timerStat = document.getElementById('timerStat');
+  const overBanner = document.getElementById('overBanner');
+  const newBtn = document.getElementById('newBtn');
+
+  let queue = [];
+  let current = null;
+  let score = 0, total = 0;
+  let running = false;
+  let intervalId = null;
+  const TIMER_LEN = 60;
+
+  function nextStatement(){
+    if(!queue.length) queue = shuffle(STATEMENTS);
+    current = queue.pop();
+    statementCard.textContent = current.text;
+    feedback.textContent = '';
+    Array.from(tfRow.children).forEach(b=>{
+      b.disabled = false;
+      b.classList.remove('correct','wrong');
+    });
+  }
+
+  function answer(btn){
+    if(!running) return;
+    total++;
+    totalStat.textContent = total;
+    Array.from(tfRow.children).forEach(b=> b.disabled = true);
+    const chose = btn.dataset.a === 'true';
+    if(chose === current.answer){
+      btn.classList.add('correct');
+      score++;
+      scoreStat.textContent = score;
+    } else {
+      btn.classList.add('wrong');
+      const correctBtn = Array.from(tfRow.children).find(b=>(b.dataset.a==='true')===current.answer);
+      if(correctBtn) correctBtn.classList.add('correct');
+    }
+    feedback.textContent = current.note;
+    setTimeout(()=>{ if(running) nextStatement(); }, 1600);
+  }
+
+  function endRound(){
+    running = false;
+    clearInterval(intervalId);
+    intervalId = null;
+    Array.from(tfRow.children).forEach(b=> b.disabled = true);
+    statementCard.textContent = "Time's up!";
+    feedback.textContent = '';
+    overBanner.textContent = `Final score: ${score} of ${total} correct.`;
+    overBanner.classList.add('show');
+  }
+
+  function tick(){
+    let s = Number(timerStat.dataset.seconds) - 1;
+    timerStat.dataset.seconds = String(s);
+    timerStat.textContent = String(s);
+    if(s<=10 && s>0){ timerStat.classList.add('ticking'); }
+    if(s<=0){
+      timerStat.textContent = '0';
+      timerStat.classList.remove('ticking');
+      timerStat.classList.add('done');
+      endRound();
+    }
+  }
+
+  function startRound(){
+    score = 0; total = 0;
+    scoreStat.textContent = '0';
+    totalStat.textContent = '0';
+    timerStat.textContent = String(TIMER_LEN);
+    timerStat.dataset.seconds = String(TIMER_LEN);
+    timerStat.classList.remove('ticking','done');
+    overBanner.classList.remove('show');
+    overBanner.textContent = '';
+    queue = shuffle(STATEMENTS);
+    running = true;
+    nextStatement();
+    clearInterval(intervalId);
+    intervalId = setInterval(tick, 1000);
+  }
+
+  Array.from(tfRow.children).forEach(btn=>{
+    btn.addEventListener('click', ()=> answer(btn));
+  });
+  newBtn.addEventListener('click', startRound);
+
+})();
+</script>
+
+</body>
+</html>

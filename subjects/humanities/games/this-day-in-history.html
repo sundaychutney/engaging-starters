@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>This Day in History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 680px; }
+
+  .date-panel {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    text-align: center;
+  }
+  .date-panel::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 26px;
+    background: #c7bfa3;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+  .date-panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a8266;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .date-label {
+    font-family: 'Caveat', cursive;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 18px;
+  }
+
+  .event-card {
+    background: #fffefa;
+    border: 1.5px dashed var(--paper-line);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+  .event-card .year {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    color: var(--gold-dark);
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+  .event-card .text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  .archive-note {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+
+  .toolbar { display: flex; justify-content: center; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  .new-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  @media (max-width: 560px) { .board { padding: 24px 16px 34px; } }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All Humanities activities</a>
+  <header>
+    <h1>This Day in History</h1>
+    <p>what happened on today's date, across the years</p>
+  </header>
+
+  <div class="date-panel">
+    <div class="date-label" id="dateLabel"></div>
+    <div id="eventList"></div>
+  </div>
+
+  <div class="toolbar">
+    <button type="button" class="new-btn" id="anotherBtn">Show another from the archive</button>
+  </div>
+
+  <footer>A small, hand-picked almanac — not every date has an entry yet, so some days pull a nearby fact from the archive instead.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // month is 1-12
+  const EVENTS = [
+    { month:1, day:1, year:"2002", text:"The euro currency entered circulation as physical notes and coins in 12 European countries." },
+    { month:1, day:20, year:"2009", text:"Barack Obama was inaugurated as the 44th President of the United States." },
+    { month:1, day:28, year:"1986", text:"The Space Shuttle Challenger broke apart shortly after launch." },
+    { month:1, day:31, year:"1958", text:"Explorer 1, the first satellite launched by the United States, reached orbit." },
+    { month:2, day:4, year:"2004", text:"Mark Zuckerberg launched Facebook from his Harvard dorm room." },
+    { month:2, day:11, year:"1990", text:"Nelson Mandela was released from prison after 27 years." },
+    { month:2, day:15, year:"1564", text:"Astronomer and physicist Galileo Galilei was born in Pisa." },
+    { month:2, day:20, year:"1962", text:"John Glenn became the first American to orbit the Earth." },
+    { month:3, day:8, year:"1911", text:"The first International Women's Day was observed." },
+    { month:3, day:14, year:"1879", text:"Albert Einstein was born in Germany." },
+    { month:3, day:17, year:null, text:"St Patrick's Day is traditionally marked as the anniversary of the death of Ireland's patron saint." },
+    { month:3, day:25, year:"1957", text:"The Treaty of Rome was signed, founding the European Economic Community." },
+    { month:4, day:12, year:"1961", text:"Yuri Gagarin became the first human to travel into space." },
+    { month:4, day:14, year:"1912", text:"RMS Titanic struck an iceberg late in the night, sinking in the early hours of April 15." },
+    { month:4, day:22, year:"1970", text:"The first Earth Day was celebrated." },
+    { month:4, day:26, year:"1986", text:"The Chernobyl nuclear disaster occurred in the Soviet Union." },
+    { month:5, day:1, year:"1931", text:"The Empire State Building officially opened in New York City." },
+    { month:5, day:8, year:"1945", text:"VE Day marked the end of World War II fighting in Europe." },
+    { month:5, day:25, year:"1977", text:"The original Star Wars film was released in cinemas." },
+    { month:5, day:29, year:"1953", text:"Edmund Hillary and Tenzing Norgay became the first climbers confirmed to reach the summit of Mount Everest." },
+    { month:6, day:6, year:"1944", text:"D-Day: Allied forces landed in Normandy, France." },
+    { month:6, day:12, year:"1942", text:"Anne Frank received a diary for her 13th birthday." },
+    { month:6, day:15, year:"1215", text:"King John of England sealed the Magna Carta." },
+    { month:6, day:28, year:"1914", text:"The assassination of Archduke Franz Ferdinand helped spark the outbreak of World War I." },
+    { month:7, day:1, year:"1867", text:"Canada became a self-governing dominion within the British Empire." },
+    { month:7, day:4, year:"1776", text:"The United States Declaration of Independence was adopted." },
+    { month:7, day:14, year:"1789", text:"The storming of the Bastille marked the start of the French Revolution." },
+    { month:7, day:20, year:"1969", text:"Neil Armstrong and Buzz Aldrin became the first humans to walk on the Moon." },
+    { month:8, day:6, year:"1945", text:"An atomic bomb was dropped on Hiroshima, Japan." },
+    { month:8, day:9, year:"1945", text:"An atomic bomb was dropped on Nagasaki, Japan." },
+    { month:8, day:15, year:"1945", text:"VJ Day marked the surrender of Japan and the end of World War II." },
+    { month:8, day:17, year:"1945", text:"Indonesia declared independence." },
+    { month:8, day:24, year:"79", text:"Mount Vesuvius erupted, burying the Roman city of Pompeii (traditional date)." },
+    { month:9, day:1, year:"1939", text:"Germany invaded Poland, beginning World War II in Europe." },
+    { month:9, day:11, year:"2001", text:"Terrorist attacks struck the World Trade Center and the Pentagon in the United States." },
+    { month:9, day:20, year:"1519", text:"Ferdinand Magellan's expedition departed Spain, later becoming the first to circumnavigate the globe." },
+    { month:10, day:12, year:"1492", text:"Christopher Columbus's expedition reached land in the Americas." },
+    { month:10, day:14, year:"1066", text:"The Battle of Hastings was fought; William the Conqueror defeated King Harold." },
+    { month:10, day:24, year:"1945", text:"The United Nations officially came into existence." },
+    { month:10, day:29, year:"1929", text:"The Wall Street Crash (\"Black Tuesday\") helped trigger the Great Depression." },
+    { month:11, day:9, year:"1989", text:"The Berlin Wall fell." },
+    { month:11, day:11, year:"1918", text:"The Armistice was signed, ending World War I fighting." },
+    { month:11, day:19, year:"1863", text:"Abraham Lincoln delivered the Gettysburg Address." },
+    { month:11, day:22, year:"1963", text:"US President John F. Kennedy was assassinated in Dallas, Texas." },
+    { month:12, day:7, year:"1941", text:"Japan launched a surprise attack on Pearl Harbor." },
+    { month:12, day:10, year:"1901", text:"The first Nobel Prizes were awarded." },
+    { month:12, day:17, year:"1903", text:"The Wright brothers achieved the first powered, controlled aeroplane flight." },
+    { month:12, day:25, year:null, text:"Christmas Day is celebrated around the world." }
+  ];
+
+  const dateLabel = document.getElementById('dateLabel');
+  const eventList = document.getElementById('eventList');
+  const anotherBtn = document.getElementById('anotherBtn');
+
+  function renderEvents(events, note, dateText){
+    dateLabel.textContent = dateText;
+    const noteHtml = note ? `<div class="archive-note">${note}</div>` : '';
+    eventList.innerHTML = noteHtml + events.map(e=>
+      `<div class="event-card"><div class="year">${e.year ? e.year : 'Every year'}</div><div class="text">${e.text}</div></div>`
+    ).join('');
+  }
+
+  function showToday(){
+    const now = new Date();
+    const month = now.getMonth()+1;
+    const day = now.getDate();
+    const dateText = now.toLocaleDateString(undefined, { day:'numeric', month:'long' });
+    const matches = EVENTS.filter(e=>e.month===month && e.day===day);
+    if(matches.length){
+      renderEvents(matches, null, dateText);
+    } else {
+      const random = EVENTS[Math.floor(Math.random()*EVENTS.length)];
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      renderEvents([random], `No entry on record for today (${dateText}) — here's one from elsewhere in the archive: ${monthNames[random.month-1]} ${random.day}.`, dateText);
+    }
+  }
+
+  function showRandom(){
+    const random = EVENTS[Math.floor(Math.random()*EVENTS.length)];
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    renderEvents([random], null, `${monthNames[random.month-1]} ${random.day}`);
+  }
+
+  anotherBtn.addEventListener('click', showRandom);
+
+  showToday();
+
+})();
+</script>
+
+</body>
+</html>

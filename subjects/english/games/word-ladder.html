@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Word Ladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 560px; }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    text-align: center;
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 26px;
+    background: #c7bfa3;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+  .panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a8266;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .segmented {
+    display: inline-flex;
+    justify-content: center;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .segmented button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 9px 15px;
+    border: none;
+    background: #fffdf7;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .segmented button + button { border-left: 1.5px solid var(--paper-line); }
+  .segmented button.active { background: var(--ink); color: var(--paper); }
+
+  .new-btn {
+    display: block;
+    margin: 18px auto 0;
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  .ladder-wrap { margin-top: 34px; }
+  .rung {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 8px 0;
+  }
+  .rung .word-box {
+    width: 140px;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    padding: 10px 8px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .rung .word-box.fixed { background: var(--gold); border-color: var(--gold-dark); color: var(--gold-dark); }
+  .rung .word-box:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(143,184,214,0.3); }
+  .rung .word-box.bad { border-color: var(--hard); }
+  .rung .arrow-down { color: var(--chalk-dim); font-size: 1.1rem; }
+
+  .result-msg {
+    margin-top: 16px;
+    font-size: 0.9rem;
+    color: var(--chalk-dim);
+    min-height: 1.2em;
+  }
+  .result-msg.correct { color: #a8d9ae; font-weight: 700; }
+
+  .btn-row { display: flex; justify-content: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .action-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.3rem;
+    padding: 8px 22px;
+    border: none;
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .action-btn:hover { transform: translateY(-1px); }
+  .ghost-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--chalk-dim);
+    background: transparent;
+    border: 1.3px dashed var(--chalk-dim);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { color: var(--chalk-white); border-color: var(--chalk-white); }
+
+  .solution-box {
+    display: none;
+    margin-top: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--chalk-dim);
+  }
+  .solution-box.show { display: block; }
+
+  @media (max-width: 560px) { .board { padding: 24px 16px 34px; } }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All English activities</a>
+  <header>
+    <h1>Word Ladder</h1>
+    <p>change one letter at a time to reach the target</p>
+  </header>
+
+  <div class="panel">
+    <div class="field">
+      <label>Difficulty</label>
+      <div class="segmented" id="diffToggle">
+        <button type="button" data-diff="all" class="active">All</button>
+        <button type="button" data-diff="Easy">Easy</button>
+        <button type="button" data-diff="Medium">Medium</button>
+        <button type="button" data-diff="Hard">Hard</button>
+      </div>
+    </div>
+    <button type="button" class="new-btn" id="newBtn">New ladder</button>
+  </div>
+
+  <div class="ladder-wrap" id="ladderWrap"></div>
+
+  <div class="btn-row">
+    <button type="button" class="action-btn" id="checkBtn">Check my chain</button>
+    <button type="button" class="ghost-btn" id="solveBtn">Reveal a solution</button>
+  </div>
+
+  <div class="result-msg" id="resultMsg"></div>
+  <div class="solution-box" id="solutionBox"></div>
+
+  <footer>Every word in your chain must be a real word, the same length as the others, and differ from the word above it by exactly one letter.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const LADDERS = [
+    { start:"CAT", end:"DOG", difficulty:"Easy", solution:["CAT","COT","COG","DOG"] },
+    { start:"PEN", end:"PIG", difficulty:"Easy", solution:["PEN","PET","PIT","PIG"] },
+    { start:"COLD", end:"WARM", difficulty:"Medium", solution:["COLD","CORD","CARD","WARD","WARM"] },
+    { start:"HEAD", end:"TAIL", difficulty:"Hard", solution:["HEAD","HEAL","TEAL","TELL","TALL","TAIL"] }
+  ];
+
+  const diffToggle = document.getElementById('diffToggle');
+  const newBtn = document.getElementById('newBtn');
+  const ladderWrap = document.getElementById('ladderWrap');
+  const checkBtn = document.getElementById('checkBtn');
+  const solveBtn = document.getElementById('solveBtn');
+  const resultMsg = document.getElementById('resultMsg');
+  const solutionBox = document.getElementById('solutionBox');
+
+  let difficulty = 'all';
+  let puzzle = null;
+
+  function pool(){
+    return difficulty === 'all' ? LADDERS : LADDERS.filter(l=>l.difficulty===difficulty);
+  }
+
+  function render(){
+    const midCount = puzzle.solution.length - 2;
+    let html = `<div class="rung"><span class="word-box fixed">${puzzle.start}</span></div><div class="arrow-down" style="text-align:center;">&darr;</div>`;
+    for(let i=0;i<midCount;i++){
+      html += `<div class="rung"><input type="text" class="word-box" data-idx="${i}" maxlength="${puzzle.start.length}"></div><div class="arrow-down" style="text-align:center;">&darr;</div>`;
+    }
+    html += `<div class="rung"><span class="word-box fixed">${puzzle.end}</span></div>`;
+    ladderWrap.innerHTML = html;
+  }
+
+  function diffLetters(a, b){
+    if(a.length !== b.length) return -1;
+    let d = 0;
+    for(let i=0;i<a.length;i++) if(a[i]!==b[i]) d++;
+    return d;
+  }
+
+  function check(){
+    const inputs = Array.from(ladderWrap.querySelectorAll('input.word-box'));
+    const chain = [puzzle.start, ...inputs.map(i=>i.value.trim().toUpperCase()), puzzle.end];
+    inputs.forEach(i=>i.classList.remove('bad'));
+
+    if(inputs.some(i=>!i.value.trim())){
+      resultMsg.textContent = 'Fill in every step of the ladder first.';
+      resultMsg.classList.remove('correct');
+      return;
+    }
+
+    let ok = true;
+    for(let i=0;i<chain.length-1;i++){
+      const d = diffLetters(chain[i], chain[i+1]);
+      if(d !== 1){
+        ok = false;
+        if(i > 0 && i-1 < inputs.length) inputs[i-1].classList.add('bad');
+        if(i < inputs.length) inputs[i].classList.add('bad');
+      }
+    }
+
+    if(ok){
+      resultMsg.textContent = `You made it! Every step changes exactly one letter.`;
+      resultMsg.classList.add('correct');
+    } else {
+      resultMsg.textContent = `Not quite — each step must change exactly one letter. Highlighted boxes are the trouble spots.`;
+      resultMsg.classList.remove('correct');
+    }
+  }
+
+  function startRound(){
+    const p = pool();
+    puzzle = p[Math.floor(Math.random()*p.length)];
+    resultMsg.textContent = '';
+    resultMsg.classList.remove('correct');
+    solutionBox.classList.remove('show');
+    solutionBox.innerHTML = '';
+    render();
+  }
+
+  diffToggle.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    Array.from(diffToggle.children).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    difficulty = btn.dataset.diff;
+    startRound();
+  });
+
+  newBtn.addEventListener('click', startRound);
+  checkBtn.addEventListener('click', check);
+  solveBtn.addEventListener('click', ()=>{
+    solutionBox.innerHTML = 'One possible solution: ' + puzzle.solution.join(' &rarr; ');
+    solutionBox.classList.add('show');
+  });
+
+  startRound();
+
+})();
+</script>
+
+</body>
+</html>

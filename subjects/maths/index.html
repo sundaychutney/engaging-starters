@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Starter Activities</title>
+<title>Maths Starters</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../../style.css">
 <style>
   .board { max-width: 1080px; padding: 40px 32px 48px; }
   header { margin-bottom: 42px; }
@@ -40,6 +40,7 @@
   }
 
   .card::before {
+    /* torn/lined paper effect */
     content: "";
     position: absolute;
     inset: 0;
@@ -76,7 +77,9 @@
     box-shadow: 0 16px 30px rgba(0,0,0,0.42);
   }
 
-  .card-link:focus-visible { outline: none; }
+  .card-link:focus-visible {
+    outline: none;
+  }
   .card-link:focus-visible .card {
     box-shadow: 0 0 0 3px var(--focus), 0 16px 30px rgba(0,0,0,0.42);
   }
@@ -129,6 +132,7 @@
     z-index: 1;
   }
 
+  /* ---- empty / coming-soon slots ---- */
   .card-empty {
     border: 2px dashed rgba(236,231,214,0.22);
     border-radius: 6px;
@@ -175,61 +179,87 @@
 <body>
 
 <div class="board">
+  <a class="back-link" href="../../index.html">&larr; All subjects</a>
   <header>
-    <h1>Starter Activities</h1>
+    <h1>Maths Starters</h1>
     <p>pinned up and ready before the bell goes</p>
   </header>
 
   <div class="rack">
 
-    <a class="card-link" href="subjects/maths/index.html">
+    <a class="card-link" href="games/24-game.html">
       <div class="card">
         <span class="pin" aria-hidden="true"></span>
-        <span class="tag">7 activities</span>
-        <h2>Maths</h2>
-        <p>Number puzzles, mental maths sprints, and two-player games — five minutes of chalkboard arithmetic.</p>
-        <span class="go">Browse subject &rarr;</span>
+        <span class="tag">Numbers · Logic</span>
+        <h2>Make 24</h2>
+        <p>Four numbers, one target. Printable puzzle sets across three difficulty levels.</p>
+        <span class="go">Open activity &rarr;</span>
       </div>
     </a>
 
-    <a class="card-link" href="subjects/science/index.html">
+    <a class="card-link" href="games/countdown-numbers.html">
       <div class="card">
         <span class="pin" aria-hidden="true"></span>
-        <span class="tag">4 activities</span>
-        <h2>Science</h2>
-        <p>Chemistry, biology, physics and environmental science — mystery elements, food webs, and more.</p>
-        <span class="go">Browse subject &rarr;</span>
+        <span class="tag">Numbers · Mental Maths</span>
+        <h2>Countdown Numbers</h2>
+        <p>Six tiles, a random target, thirty seconds on the clock. Just like the TV show.</p>
+        <span class="go">Open activity &rarr;</span>
       </div>
     </a>
 
-    <a class="card-link" href="subjects/english/index.html">
+    <a class="card-link" href="games/nines-challenge.html">
       <div class="card">
         <span class="pin" aria-hidden="true"></span>
-        <span class="tag">4 activities</span>
-        <h2>English</h2>
-        <p>Vocabulary, grammar and creative writing warm-ups — word ladders, fix-its, and story sprints.</p>
-        <span class="go">Browse subject &rarr;</span>
+        <span class="tag">Numbers · Logic</span>
+        <h2>Nine's Challenge</h2>
+        <p>Four of the same digit, every basic operation. How many numbers can you make?</p>
+        <span class="go">Open activity &rarr;</span>
       </div>
     </a>
 
-    <a class="card-link" href="subjects/humanities/index.html">
+    <a class="card-link" href="games/number-of-the-day.html">
       <div class="card">
         <span class="pin" aria-hidden="true"></span>
-        <span class="tag">4 activities</span>
-        <h2>Humanities</h2>
-        <p>Geography, history and civics — mystery countries, timelines, and this-day-in-history.</p>
-        <span class="go">Browse subject &rarr;</span>
+        <span class="tag">Numbers · Mental Maths</span>
+        <h2>Number of the Day</h2>
+        <p>Six digits straight from today's date. Make every number from 1 to 20.</p>
+        <span class="go">Open activity &rarr;</span>
       </div>
     </a>
 
-    <div class="card-empty">
-      <span class="plus">+</span>
-      <p>more subjects soon</p>
-    </div>
+    <a class="card-link" href="games/broken-calculator.html">
+      <div class="card">
+        <span class="pin" aria-hidden="true"></span>
+        <span class="tag">Numbers · Logic</span>
+        <h2>Broken Calculator</h2>
+        <p>Only two or three buttons work. Reach the target in as few presses as you can.</p>
+        <span class="go">Open activity &rarr;</span>
+      </div>
+    </a>
+
+    <a class="card-link" href="games/bulls-and-cows.html">
+      <div class="card">
+        <span class="pin" aria-hidden="true"></span>
+        <span class="tag">Numbers · Logic</span>
+        <h2>Bulls and Cows</h2>
+        <p>Guess the secret number using bulls and cows clues from every try.</p>
+        <span class="go">Open activity &rarr;</span>
+      </div>
+    </a>
+
+    <a class="card-link" href="games/product-game.html">
+      <div class="card">
+        <span class="pin" aria-hidden="true"></span>
+        <span class="tag">Numbers · Two Player</span>
+        <h2>The Product Game</h2>
+        <p>Move a factor, claim the product, get four in a row. Printable for pen &amp; paper too.</p>
+        <span class="go">Open activity &rarr;</span>
+      </div>
+    </a>
 
   </div>
 
-  <footer>a growing shelf of five-minute warm-ups, across every learning area</footer>
+  <footer>a growing shelf of five-minute warm-ups</footer>
 </div>
 
 </body>

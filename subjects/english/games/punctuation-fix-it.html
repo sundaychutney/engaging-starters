@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Punctuation Fix-It</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 680px; }
+
+  .card {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 26px 26px 22px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    text-align: center;
+  }
+
+  .broken-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .broken-sentence {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    background: #fffefa;
+    border: 2px dashed var(--paper-line);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 22px;
+  }
+
+  .fix-input {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    padding: 12px 14px;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: #fffefa;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .fix-input:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(143,184,214,0.3); }
+
+  .btn-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .action-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.3rem;
+    padding: 8px 22px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .action-btn:hover { transform: translateY(-1px); }
+  .ghost-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .reveal-box {
+    display: none;
+    margin-top: 20px;
+    text-align: left;
+    border-top: 1.5px dashed var(--paper-line);
+    padding-top: 16px;
+  }
+  .reveal-box.show { display: block; }
+  .reveal-box .fixed-sentence {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.05rem;
+    color: var(--gold-dark);
+    margin-bottom: 8px;
+  }
+  .reveal-box .rule {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  .toolbar { display: flex; justify-content: center; margin-top: 26px; }
+  .new-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  @media (max-width: 560px) { .board { padding: 24px 16px 34px; } }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All English activities</a>
+  <header>
+    <h1>Punctuation Fix-It</h1>
+    <p>rewrite the sentence, then check your fix</p>
+  </header>
+
+  <div class="card">
+    <div class="broken-label">Fix this sentence</div>
+    <div class="broken-sentence" id="brokenSentence"></div>
+
+    <input type="text" class="fix-input" id="fixInput" placeholder="Type your corrected sentence…" autocomplete="off">
+
+    <div class="btn-row">
+      <button type="button" class="action-btn" id="revealBtn">Check my fix</button>
+    </div>
+
+    <div class="reveal-box" id="revealBox"></div>
+  </div>
+
+  <div class="toolbar">
+    <button type="button" class="new-btn" id="newBtn">Next sentence</button>
+  </div>
+
+  <footer>Type your best fix, then reveal to compare it with a correct version and the punctuation rule behind it.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SENTENCES = [
+    { broken:"im going to the shop", fixed:"I'm going to the shop.", rule:"Capitalise ‘I’ and use an apostrophe in the contraction “I'm”. Sentences end with a full stop." },
+    { broken:"wheres my pencil case", fixed:"Where's my pencil case?", rule:"Questions end with a question mark, and “where's” needs an apostrophe (short for “where is”)." },
+    { broken:"the dogs bone was buried in the yard", fixed:"The dog's bone was buried in the yard.", rule:"An apostrophe + s shows the bone belongs to the dog (possessive). Capitalise the first word of the sentence." },
+    { broken:"stop shouted the teacher", fixed:"\"Stop!\" shouted the teacher.", rule:"Use quotation marks around spoken words, and an exclamation mark because it's shouted." },
+    { broken:"we need eggs milk bread and butter", fixed:"We need eggs, milk, bread and butter.", rule:"Commas separate items in a list." },
+    { broken:"its going to rain today", fixed:"It's going to rain today.", rule:"“It's” (short for “it is”) needs an apostrophe — don't confuse it with “its”, which shows belonging." },
+    { broken:"my brothers name is sam", fixed:"My brother's name is Sam.", rule:"Apostrophe + s for possession, and capitalise the name “Sam”." },
+    { broken:"have you finished your homework asked mum", fixed:"\"Have you finished your homework?\" asked Mum.", rule:"A question mark belongs inside the quotation marks because the question is what's spoken. Capitalise “Mum” when used as a name." },
+    { broken:"there are three pens two rulers and a sharpener in my bag", fixed:"There are three pens, two rulers, and a sharpener in my bag.", rule:"Commas separate items in a list, and the sentence starts with a capital letter." },
+    { broken:"cant you see im busy", fixed:"Can't you see I'm busy?", rule:"Apostrophes in “can't” and “I'm”, and a question mark because it's a question." },
+    { broken:"well ill see you tomorrow said jack", fixed:"\"Well, I'll see you tomorrow,\" said Jack.", rule:"A comma follows the introductory word “well”, an apostrophe in “I'll”, and quotation marks around the speech, with a capital for “Jack”." }
+  ];
+
+  const brokenSentence = document.getElementById('brokenSentence');
+  const fixInput = document.getElementById('fixInput');
+  const revealBtn = document.getElementById('revealBtn');
+  const revealBox = document.getElementById('revealBox');
+  const newBtn = document.getElementById('newBtn');
+
+  let queue = [];
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  let current = null;
+
+  function nextSentence(){
+    if(!queue.length) queue = shuffle(SENTENCES);
+    current = queue.pop();
+    brokenSentence.textContent = current.broken;
+    fixInput.value = '';
+    revealBox.classList.remove('show');
+    revealBox.innerHTML = '';
+    fixInput.focus();
+  }
+
+  revealBtn.addEventListener('click', ()=>{
+    revealBox.innerHTML = `<div class="fixed-sentence">${current.fixed}</div><div class="rule">${current.rule}</div>`;
+    revealBox.classList.add('show');
+  });
+
+  newBtn.addEventListener('click', nextSentence);
+
+  nextSentence();
+
+})();
+</script>
+
+</body>
+</html>

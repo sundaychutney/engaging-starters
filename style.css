@@ -20,6 +20,12 @@
   --medium-dark: #93701f;
   --hard: #c1594a;
   --hard-dark: #7c3527;
+  --gold: #e3b23c;
+  --gold-dark: #93701f;
+  --p1: #8fb8d6;
+  --p1-dark: #3f6f92;
+  --p2: #c1594a;
+  --p2-dark: #7c3527;
   --wood: #6b4a34;
   --focus: #8fb8d6;
   --pin: #c1594a;
@@ -48,7 +54,7 @@ body {
 a { color: inherit; }
 
 .board {
-  max-width: 1080px;
+  max-width: 640px;
   margin: 0 auto;
   border: 10px solid var(--wood);
   border-radius: 14px;
@@ -94,8 +100,7 @@ header p {
 
 footer {
   text-align: center;
-  margin-top: 46px;
-  font-family: 'Caveat', cursive;
-  font-size: 1.05rem;
   color: var(--chalk-dim);
+  font-size: 0.78rem;
+  margin-top: 34px;
 }

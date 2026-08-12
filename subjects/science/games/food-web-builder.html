@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Food Web Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 760px; }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    text-align: center;
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 26px;
+    background: #c7bfa3;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+  .panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a8266;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .habitat-line {
+    font-family: 'Caveat', cursive;
+    font-size: 1.4rem;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .instructions { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 20px; }
+
+  .zone-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    text-align: left;
+  }
+
+  .chain-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    min-height: 60px;
+    padding: 12px;
+    border: 1.5px dashed var(--paper-line);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+
+  .organism-tile {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 16px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: #fffefa;
+    color: var(--ink);
+    cursor: pointer;
+    transition: transform 0.06s ease;
+  }
+  .organism-tile:hover { transform: translateY(-2px); }
+  .organism-tile.placed { background: var(--gold); border-color: var(--gold-dark); color: var(--gold-dark); }
+
+  .arrow { color: var(--ink-soft); font-size: 1.1rem; }
+
+  .btn-row { display: flex; justify-content: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+
+  .action-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.3rem;
+    padding: 8px 22px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .action-btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .ghost-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .result-msg {
+    margin-top: 14px;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    min-height: 1.2em;
+  }
+  .result-msg.correct { color: var(--gold-dark); font-weight: 700; }
+
+  .reveal-box {
+    display: none;
+    margin-top: 18px;
+    text-align: left;
+    border-top: 1.5px dashed var(--paper-line);
+    padding-top: 16px;
+  }
+  .reveal-box.show { display: block; }
+  .reveal-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    padding: 4px 0;
+  }
+  .reveal-row .role {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+  .reveal-row .name { flex: 1; font-weight: 700; }
+
+  .toolbar { display: flex; justify-content: center; margin-top: 30px; }
+  .new-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  @media (max-width: 560px) {
+    .board { padding: 24px 16px 34px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All Science activities</a>
+  <header>
+    <h1>Food Web Builder</h1>
+    <p>click the organisms into the right feeding order</p>
+  </header>
+
+  <div class="panel">
+    <div class="habitat-line" id="habitatLine"></div>
+    <div class="instructions">Click each tile below, in order, starting with the producer (the organism that makes its own food from sunlight).</div>
+
+    <div class="zone-label">Your chain</div>
+    <div class="chain-row" id="answerRow"></div>
+
+    <div class="zone-label">Click to add</div>
+    <div class="chain-row" id="poolRow"></div>
+
+    <div class="btn-row">
+      <button type="button" class="action-btn" id="checkBtn">Check my order</button>
+      <button type="button" class="ghost-btn" id="resetBtn">Reset</button>
+      <button type="button" class="ghost-btn" id="revealBtn">Reveal answer</button>
+    </div>
+
+    <div class="result-msg" id="resultMsg"></div>
+
+    <div class="reveal-box" id="revealBox"></div>
+  </div>
+
+  <div class="toolbar">
+    <button type="button" class="new-btn" id="newBtn">New food chain</button>
+  </div>
+
+  <footer>Producer &rarr; primary consumer &rarr; secondary consumer &rarr; tertiary consumer. Energy flows up the chain from the sun, through the producer, to every animal that eats another animal.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const CHAINS = [
+    { habitat:"Grassland", organisms:["Grass","Grasshopper","Frog","Snake","Hawk"], roles:["Producer","Primary consumer","Secondary consumer","Tertiary consumer","Apex predator"] },
+    { habitat:"Open ocean", organisms:["Phytoplankton","Krill","Small fish","Seal","Orca"], roles:["Producer","Primary consumer","Secondary consumer","Tertiary consumer","Apex predator"] },
+    { habitat:"Pond", organisms:["Algae","Tadpole","Fish","Heron"], roles:["Producer","Primary consumer","Secondary consumer","Tertiary consumer"] },
+    { habitat:"Woodland", organisms:["Leaves","Caterpillar","Robin","Hawk"], roles:["Producer","Primary consumer","Secondary consumer","Tertiary consumer"] },
+    { habitat:"Kelp forest", organisms:["Kelp","Sea urchin","Sea otter","Orca"], roles:["Producer","Primary consumer","Secondary consumer","Tertiary consumer"] },
+    { habitat:"Farmland", organisms:["Wheat","Mouse","Owl"], roles:["Producer","Primary consumer","Secondary consumer"] },
+    { habitat:"Open sea", organisms:["Plankton","Small fish","Tuna","Shark"], roles:["Producer","Primary consumer","Secondary consumer","Tertiary consumer"] },
+    { habitat:"Field", organisms:["Corn","Rabbit","Fox"], roles:["Producer","Primary consumer","Secondary consumer"] },
+    { habitat:"Garden", organisms:["Flowers","Bee","Spider","Garden bird"], roles:["Producer","Primary consumer","Secondary consumer","Tertiary consumer"] },
+    { habitat:"Savanna", organisms:["Grass","Zebra","Lion"], roles:["Producer","Primary consumer","Secondary consumer"] }
+  ];
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  const habitatLine = document.getElementById('habitatLine');
+  const answerRow = document.getElementById('answerRow');
+  const poolRow = document.getElementById('poolRow');
+  const checkBtn = document.getElementById('checkBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const revealBtn = document.getElementById('revealBtn');
+  const resultMsg = document.getElementById('resultMsg');
+  const revealBox = document.getElementById('revealBox');
+  const newBtn = document.getElementById('newBtn');
+
+  let chain = null;
+  let placed = [];
+  let pool = [];
+  let done = false;
+
+  function render(){
+    answerRow.innerHTML = placed.length
+      ? placed.map((name,i)=>`<span class="organism-tile placed" data-idx="${i}">${name}</span>${i<placed.length-1?'<span class="arrow">&rarr;</span>':''}`).join('')
+      : '<span style="color:var(--ink-soft);font-size:0.85rem;">(click tiles below to build the chain)</span>';
+
+    poolRow.innerHTML = pool.map((name,i)=>`<span class="organism-tile" data-idx="${i}">${name}</span>`).join('');
+
+    checkBtn.disabled = done || placed.length !== chain.organisms.length;
+
+    Array.from(answerRow.querySelectorAll('.organism-tile')).forEach(el=>{
+      el.addEventListener('click', ()=>{
+        if(done) return;
+        const idx = Number(el.dataset.idx);
+        pool.push(placed[idx]);
+        placed.splice(idx,1);
+        render();
+      });
+    });
+    Array.from(poolRow.querySelectorAll('.organism-tile')).forEach(el=>{
+      el.addEventListener('click', ()=>{
+        if(done) return;
+        const idx = Number(el.dataset.idx);
+        placed.push(pool[idx]);
+        pool.splice(idx,1);
+        render();
+      });
+    });
+  }
+
+  function showReveal(){
+    revealBox.innerHTML = chain.organisms.map((name,i)=>
+      `<div class="reveal-row"><span class="role">${chain.roles[i]}</span><span class="name">${name}</span></div>`
+    ).join('');
+    revealBox.classList.add('show');
+  }
+
+  function check(){
+    if(placed.length !== chain.organisms.length) return;
+    let correct = 0;
+    for(let i=0;i<chain.organisms.length;i++){
+      if(placed[i] === chain.organisms[i]) correct++;
+    }
+    if(correct === chain.organisms.length){
+      done = true;
+      resultMsg.textContent = `Correct! That's the full chain, start to finish.`;
+      resultMsg.classList.add('correct');
+      showReveal();
+    } else {
+      resultMsg.textContent = `${correct} of ${chain.organisms.length} in the right spot. Try again, or reveal the answer.`;
+      resultMsg.classList.remove('correct');
+    }
+  }
+
+  function startRound(){
+    chain = CHAINS[Math.floor(Math.random()*CHAINS.length)];
+    placed = [];
+    pool = shuffle(chain.organisms);
+    done = false;
+    resultMsg.textContent = '';
+    resultMsg.classList.remove('correct');
+    revealBox.classList.remove('show');
+    revealBox.innerHTML = '';
+    habitatLine.textContent = chain.habitat;
+    render();
+  }
+
+  checkBtn.addEventListener('click', check);
+  resetBtn.addEventListener('click', ()=>{
+    if(done) return;
+    pool = shuffle(placed.concat(pool));
+    placed = [];
+    render();
+  });
+  revealBtn.addEventListener('click', ()=>{
+    done = true;
+    render();
+    if(!resultMsg.classList.contains('correct')){
+      resultMsg.textContent = 'Here\'s the correct order:';
+    }
+    showReveal();
+  });
+  newBtn.addEventListener('click', startRound);
+
+  startRound();
+
+})();
+</script>
+
+</body>
+</html>

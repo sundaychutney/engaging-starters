@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mystery Element</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<style>
+  .board { max-width: 640px; }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+  }
+
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 26px;
+    background: #c7bfa3;
+    border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  }
+  .panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a8266;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .clue-list {
+    list-style: none;
+    margin: 0 0 18px;
+    padding: 0;
+    counter-reset: clue;
+  }
+  .clue-list li {
+    counter-increment: clue;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    padding: 8px 0 8px 30px;
+    position: relative;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+  .clue-list li:first-child { padding-top: 0; }
+  .clue-list li::before {
+    content: counter(clue);
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--gold-dark);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .guess-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .guess-input {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: #fffefa;
+    color: var(--ink);
+  }
+  .guess-input:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(143,184,214,0.3); }
+
+  .guess-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.3rem;
+    padding: 6px 22px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .guess-btn:hover { transform: translateY(-1px); }
+
+  .util-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .ghost-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover:not(:disabled) { color: var(--ink); border-color: var(--ink); }
+  .ghost-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .wrong-log {
+    margin-top: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--hard-dark);
+    text-align: center;
+    min-height: 1.2em;
+  }
+
+  .win-banner {
+    display: none;
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.6rem;
+    color: var(--gold-dark);
+    margin-top: 16px;
+  }
+  .win-banner.show { display: block; }
+
+  .answer-box {
+    display: none;
+    margin-top: 14px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+  .answer-box .symbol {
+    display: inline-block;
+    width: 56px;
+    height: 56px;
+    line-height: 56px;
+    margin-bottom: 8px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: var(--gold);
+    color: var(--gold-dark);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1.6rem;
+  }
+  .answer-box.show { display: block; }
+
+  .toolbar {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+  }
+  .new-btn {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.03em;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+    transition: transform 0.08s ease;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  @media (max-width: 560px) {
+    .board { padding: 24px 16px 34px; }
+    .guess-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="back-link" href="../index.html">&larr; All Science activities</a>
+  <header>
+    <h1>Mystery Element</h1>
+    <p>reveal clues one at a time — how few do you need?</p>
+  </header>
+
+  <div class="panel">
+    <ol class="clue-list" id="clueList"></ol>
+
+    <div class="guess-row">
+      <input type="text" class="guess-input" id="guessInput" placeholder="Type your guess…" autocomplete="off">
+      <button type="button" class="guess-btn" id="guessBtn">Guess</button>
+    </div>
+
+    <div class="util-row">
+      <button type="button" class="ghost-btn" id="clueBtn">Reveal next clue</button>
+      <button type="button" class="ghost-btn" id="giveUpBtn">Give up</button>
+    </div>
+
+    <div class="wrong-log" id="wrongLog"></div>
+    <div class="win-banner" id="winBanner"></div>
+    <div class="answer-box" id="answerBox"></div>
+  </div>
+
+  <div class="toolbar">
+    <button type="button" class="new-btn" id="newBtn">New element</button>
+  </div>
+
+  <footer>Guess the element from its clues. One clue is free — reveal more if you're stuck, but fewer clues used means a better score.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const ELEMENTS = [
+    { name:"Hydrogen", symbol:"H", clues:[
+      "I am the lightest and most abundant element in the universe.",
+      "I have just 1 proton in my nucleus.",
+      "I make up about 75% of all the mass in the universe.",
+      "Combine me with oxygen and you get water."
+    ]},
+    { name:"Helium", symbol:"He", clues:[
+      "I'm a noble gas — I barely react with anything else.",
+      "I have 2 protons in my nucleus.",
+      "I'm used to fill party balloons and airships.",
+      "Breathing me in makes your voice sound squeaky (not recommended!)."
+    ]},
+    { name:"Carbon", symbol:"C", clues:[
+      "Every living thing on Earth is built around me.",
+      "I have 6 protons in my nucleus.",
+      "In one form I'm soft graphite, in another I'm the hardest natural material: diamond.",
+      "I'm released as carbon dioxide when fuels burn."
+    ]},
+    { name:"Nitrogen", symbol:"N", clues:[
+      "I make up about 78% of the air you're breathing right now.",
+      "I have 7 protons in my nucleus.",
+      "Plants need compounds of me to grow, which is why farmers use fertiliser.",
+      "As a gas I'm mostly unreactive, but I'm essential in proteins and DNA."
+    ]},
+    { name:"Oxygen", symbol:"O", clues:[
+      "You need me to breathe.",
+      "I have 8 protons in my nucleus.",
+      "Plants release me during photosynthesis.",
+      "I make up about 21% of the air around you."
+    ]},
+    { name:"Sodium", symbol:"Na", clues:[
+      "I'm a soft, silvery metal that reacts violently with water.",
+      "I have 11 protons in my nucleus.",
+      "Combine me with chlorine and I become table salt.",
+      "My symbol comes from the Latin word 'natrium'."
+    ]},
+    { name:"Magnesium", symbol:"Mg", clues:[
+      "I burn with a brilliant white light, which is why I'm used in fireworks and flares.",
+      "I have 12 protons in my nucleus.",
+      "I'm essential for the chlorophyll that makes plants green.",
+      "I'm a lightweight metal, often alloyed for use in cars and planes."
+    ]},
+    { name:"Aluminium", symbol:"Al", clues:[
+      "I'm the most abundant metal in the Earth's crust.",
+      "I have 13 protons in my nucleus.",
+      "I'm lightweight, resist rust, and get made into drink cans and kitchen foil.",
+      "My main ore is called bauxite."
+    ]},
+    { name:"Silicon", symbol:"Si", clues:[
+      "I'm the key ingredient in computer chips.",
+      "I have 14 protons in my nucleus.",
+      "I'm the second most abundant element in the Earth's crust, after oxygen.",
+      "Ordinary sand is mostly made of my dioxide."
+    ]},
+    { name:"Sulfur", symbol:"S", clues:[
+      "Combined with hydrogen, I smell like rotten eggs.",
+      "I have 16 protons in my nucleus.",
+      "I'm a yellow solid at room temperature.",
+      "Volcanoes often release compounds of me into the air."
+    ]},
+    { name:"Chlorine", symbol:"Cl", clues:[
+      "I'm a toxic, yellow-green gas.",
+      "I have 17 protons in my nucleus.",
+      "I'm used to disinfect swimming pools and drinking water.",
+      "Combined with sodium, I become table salt."
+    ]},
+    { name:"Potassium", symbol:"K", clues:[
+      "I'm a soft metal that reacts violently with water — even more than sodium.",
+      "I have 19 protons in my nucleus.",
+      "Bananas are famous for containing me.",
+      "My symbol comes from the Latin word 'kalium'."
+    ]},
+    { name:"Calcium", symbol:"Ca", clues:[
+      "I help make your bones and teeth strong.",
+      "I have 20 protons in my nucleus.",
+      "I'm found in milk and other dairy products.",
+      "Limestone and marble are made from my compounds."
+    ]},
+    { name:"Iron", symbol:"Fe", clues:[
+      "I'm the main metal used to make steel.",
+      "I have 26 protons in my nucleus.",
+      "I carry oxygen around your body as part of haemoglobin in red blood cells.",
+      "I rust when exposed to water and oxygen together."
+    ]},
+    { name:"Copper", symbol:"Cu", clues:[
+      "I'm a reddish-orange metal.",
+      "I have 29 protons in my nucleus.",
+      "I conduct electricity extremely well, so I'm used in wiring.",
+      "I turn green over time — think of the Statue of Liberty."
+    ]},
+    { name:"Zinc", symbol:"Zn", clues:[
+      "I'm coated onto steel to stop it rusting — a process called galvanising.",
+      "I have 30 protons in my nucleus.",
+      "I'm found in sunscreen and some cold remedies.",
+      "Mixed with copper, I make the alloy brass."
+    ]},
+    { name:"Silver", symbol:"Ag", clues:[
+      "I'm a shiny metal — the best electrical conductor of any element.",
+      "I have 47 protons in my nucleus.",
+      "I'm used in jewellery, cutlery and coins.",
+      "My symbol comes from the Latin word 'argentum'."
+    ]},
+    { name:"Gold", symbol:"Au", clues:[
+      "I'm a soft, shiny yellow metal that never tarnishes.",
+      "I have 79 protons in my nucleus.",
+      "I'm one of the least chemically reactive elements there is.",
+      "My symbol comes from the Latin word 'aurum'."
+    ]}
+  ];
+
+  const clueList = document.getElementById('clueList');
+  const guessInput = document.getElementById('guessInput');
+  const guessBtn = document.getElementById('guessBtn');
+  const clueBtn = document.getElementById('clueBtn');
+  const giveUpBtn = document.getElementById('giveUpBtn');
+  const wrongLog = document.getElementById('wrongLog');
+  const winBanner = document.getElementById('winBanner');
+  const answerBox = document.getElementById('answerBox');
+  const newBtn = document.getElementById('newBtn');
+
+  let current = null;
+  let cluesShown = 1;
+  let wrongGuesses = 0;
+  let done = false;
+
+  function pick(){
+    return ELEMENTS[Math.floor(Math.random()*ELEMENTS.length)];
+  }
+
+  function renderClues(){
+    clueList.innerHTML = current.clues.slice(0, cluesShown).map(c=>`<li>${c}</li>`).join('');
+    clueBtn.disabled = done || cluesShown >= current.clues.length;
+    clueBtn.textContent = cluesShown >= current.clues.length ? 'No more clues' : 'Reveal next clue';
+  }
+
+  function startRound(){
+    current = pick();
+    cluesShown = 1;
+    wrongGuesses = 0;
+    done = false;
+    wrongLog.textContent = '';
+    winBanner.classList.remove('show');
+    winBanner.textContent = '';
+    answerBox.classList.remove('show');
+    answerBox.innerHTML = '';
+    guessInput.value = '';
+    guessInput.disabled = false;
+    guessBtn.disabled = false;
+    giveUpBtn.disabled = false;
+    renderClues();
+    guessInput.focus();
+  }
+
+  function endRound(won){
+    done = true;
+    guessInput.disabled = true;
+    guessBtn.disabled = true;
+    giveUpBtn.disabled = true;
+    clueBtn.disabled = true;
+    answerBox.innerHTML = `<span class="symbol">${current.symbol}</span><div>${current.name} (${current.symbol})</div>`;
+    answerBox.classList.add('show');
+    if(won){
+      winBanner.textContent = `Correct! Solved using ${cluesShown} clue${cluesShown===1?'':'s'} and ${wrongGuesses} wrong guess${wrongGuesses===1?'':'es'}.`;
+      winBanner.classList.add('show');
+    }
+  }
+
+  function submitGuess(){
+    if(done) return;
+    const guess = guessInput.value.trim();
+    if(!guess) return;
+    if(guess.toLowerCase() === current.name.toLowerCase() || guess.toLowerCase() === current.symbol.toLowerCase()){
+      endRound(true);
+    } else {
+      wrongGuesses++;
+      wrongLog.textContent = `"${guess}" isn't it — try again, or reveal another clue.`;
+      guessInput.value = '';
+      guessInput.focus();
+    }
+  }
+
+  clueBtn.addEventListener('click', ()=>{
+    if(cluesShown < current.clues.length){
+      cluesShown++;
+      renderClues();
+    }
+  });
+
+  giveUpBtn.addEventListener('click', ()=> endRound(false));
+  guessBtn.addEventListener('click', submitGuess);
+  guessInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submitGuess(); });
+  newBtn.addEventListener('click', startRound);
+
+  startRound();
+
+})();
+</script>
+
+</body>
+</html>
