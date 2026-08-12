@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../../style.css">
+<link rel="icon" href="../../../favicon.svg" type="image/svg+xml">
 <style>
   .board { max-width: 640px; }
 
@@ -135,7 +136,7 @@
 
     <div class="keyboard" id="keyboard"></div>
 
-    <div class="status-row" id="statusRow">Pick a letter to begin.</div>
+    <div class="status-row" id="statusRow">Click a letter or type it on your keyboard.</div>
     <div class="win-banner" id="winBanner"></div>
     <div class="lose-banner" id="loseBanner"></div>
     <div class="fact-box" id="factBox"></div>
@@ -216,7 +217,7 @@
   }
 
   function guessLetter(ch, btn){
-    if(done || guessed.has(ch)) return;
+    if(!current || done || guessed.has(ch)) return;
     guessed.add(ch);
     btn.disabled = true;
     if(current.name.toUpperCase().includes(ch)){
@@ -255,7 +256,7 @@
     guessed = new Set();
     wrongCount = 0;
     done = false;
-    statusRow.textContent = 'Pick a letter to begin.';
+    statusRow.textContent = 'Click a letter or type it on your keyboard.';
     winBanner.classList.remove('show');
     winBanner.textContent = '';
     loseBanner.classList.remove('show');
@@ -268,6 +269,16 @@
   }
 
   newBtn.addEventListener('click', startRound);
+
+  document.addEventListener('keydown', (e) => {
+    if(e.ctrlKey || e.altKey || e.metaKey) return;
+    const ch = e.key.toUpperCase();
+    if(ch.length !== 1 || ch < 'A' || ch > 'Z') return;
+    const btn = Array.from(keyboard.children).find(b => b.dataset.letter === ch);
+    if(btn && !btn.disabled){
+      guessLetter(ch, btn);
+    }
+  });
 
   fetch(DATA_URL)
     .then(r => r.json())
