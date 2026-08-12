@@ -5,175 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Maths Starters</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../style.css">
 <style>
-  .board { max-width: 1080px; padding: 40px 32px 48px; }
-  header { margin-bottom: 42px; }
-  header h1 { font-size: clamp(2.8rem, 7vw, 4.4rem); }
-  header p { font-size: 1.4rem; margin: 6px 0 0; }
-
-  .rack {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 44px 28px;
-    padding: 10px 6px 0;
-  }
-
-  .card-link {
-    text-decoration: none;
-    display: block;
-  }
-
-  .card {
-    position: relative;
-    background: var(--paper);
-    color: var(--ink);
-    border-radius: 3px;
-    padding: 26px 20px 20px;
-    min-height: 190px;
-    box-shadow: 0 10px 22px rgba(0,0,0,0.35);
-    transform: rotate(var(--tilt, -1.4deg));
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .card::before {
-    /* torn/lined paper effect */
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 3px;
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent, transparent 27px,
-      var(--paper-line) 28px
-    );
-    opacity: 0.5;
-    pointer-events: none;
-  }
-
-  .pin {
-    position: absolute;
-    top: -13px;
-    left: 50%;
-    transform: translateX(-50%) rotate(var(--tilt, -1.4deg));
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #e07a6a, var(--pin) 55%, var(--pin-dark) 100%);
-    box-shadow: 0 3px 5px rgba(0,0,0,0.4);
-    z-index: 2;
-  }
-
-  .card-link:nth-child(2n) .card { --tilt: 1.6deg; }
-  .card-link:nth-child(3n) .card { --tilt: -0.8deg; }
-  .card-link:nth-child(4n) .card { --tilt: 1.1deg; }
-
-  .card-link:hover .card,
-  .card-link:focus-visible .card {
-    transform: rotate(0deg) translateY(-4px);
-    box-shadow: 0 16px 30px rgba(0,0,0,0.42);
-  }
-
-  .card-link:focus-visible {
-    outline: none;
-  }
-  .card-link:focus-visible .card {
-    box-shadow: 0 0 0 3px var(--focus), 0 16px 30px rgba(0,0,0,0.42);
-  }
-
-  .tag {
-    align-self: flex-start;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.66rem;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    font-weight: 700;
-    color: var(--pin-dark);
-    background: rgba(193,89,74,0.12);
-    border: 1px solid rgba(193,89,74,0.3);
-    border-radius: 20px;
-    padding: 3px 10px;
-    margin-bottom: 14px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .card h2 {
-    font-family: 'Caveat', cursive;
-    font-weight: 700;
-    font-size: 1.9rem;
-    margin: 0 0 6px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .card p {
-    font-size: 0.88rem;
-    color: var(--ink-soft);
-    line-height: 1.45;
-    margin: 0;
-    position: relative;
-    z-index: 1;
-    flex-grow: 1;
-  }
-
-  .card .go {
-    margin-top: 14px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--pin-dark);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* ---- empty / coming-soon slots ---- */
-  .card-empty {
-    border: 2px dashed rgba(236,231,214,0.22);
-    border-radius: 6px;
-    min-height: 190px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: var(--chalk-dim);
-    padding: 20px;
-  }
-
-  .card-empty .plus {
-    font-family: 'Space Mono', monospace;
-    font-size: 1.6rem;
-    line-height: 1;
-    margin-bottom: 8px;
-    opacity: 0.6;
-  }
-
-  .card-empty p {
-    font-family: 'Caveat', cursive;
-    font-size: 1.25rem;
-    margin: 0;
-    opacity: 0.75;
-  }
-
-  footer {
-    text-align: center;
-    margin-top: 46px;
-    font-family: 'Caveat', cursive;
-    font-size: 1.05rem;
-    color: var(--chalk-dim);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .card, .card-link:hover .card, .card-link:focus-visible .card {
-      transition: none;
-    }
-  }
+  .board { max-width: 720px; padding: 40px 32px 48px; }
 </style>
 </head>
 <body>
@@ -181,85 +16,106 @@
 <div class="board">
   <a class="back-link" href="../../index.html">&larr; All subjects</a>
   <header>
-    <h1>Maths Starters</h1>
-    <p>pinned up and ready before the bell goes</p>
+    <div class="subject-title-row">
+      <div class="subject-chip maths">
+        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <text x="15" y="22" font-family="Fredoka" font-weight="700" font-size="22" fill="#fff" text-anchor="middle">&#247;</text>
+        </svg>
+      </div>
+      <h1>Maths</h1>
+    </div>
+    <p>7 activities &middot; five minutes each</p>
   </header>
 
-  <div class="rack">
+  <div class="game-list">
 
-    <a class="card-link" href="games/24-game.html">
-      <div class="card">
-        <span class="pin" aria-hidden="true"></span>
-        <span class="tag">Numbers · Logic</span>
-        <h2>Make 24</h2>
+    <a class="game-row maths" href="games/24-game.html">
+      <span class="num">01</span>
+      <div class="info">
+        <h3>Make 24</h3>
         <p>Four numbers, one target. Printable puzzle sets across three difficulty levels.</p>
-        <span class="go">Open activity &rarr;</span>
+      </div>
+      <div class="meta">
+        <span class="pill maths">Numbers &middot; Logic</span>
+        <span class="timer-badge"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2.4"/><path d="M12 13V8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>5 min</span>
       </div>
     </a>
 
-    <a class="card-link" href="games/countdown-numbers.html">
-      <div class="card">
-        <span class="pin" aria-hidden="true"></span>
-        <span class="tag">Numbers · Mental Maths</span>
-        <h2>Countdown Numbers</h2>
+    <a class="game-row maths" href="games/countdown-numbers.html">
+      <span class="num">02</span>
+      <div class="info">
+        <h3>Countdown Numbers</h3>
         <p>Six tiles, a random target, thirty seconds on the clock. Just like the TV show.</p>
-        <span class="go">Open activity &rarr;</span>
+      </div>
+      <div class="meta">
+        <span class="pill maths">Numbers &middot; Mental Maths</span>
+        <span class="timer-badge"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2.4"/><path d="M12 13V8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>5 min</span>
       </div>
     </a>
 
-    <a class="card-link" href="games/nines-challenge.html">
-      <div class="card">
-        <span class="pin" aria-hidden="true"></span>
-        <span class="tag">Numbers · Logic</span>
-        <h2>Nine's Challenge</h2>
+    <a class="game-row maths" href="games/nines-challenge.html">
+      <span class="num">03</span>
+      <div class="info">
+        <h3>Nine's Challenge</h3>
         <p>Four of the same digit, every basic operation. How many numbers can you make?</p>
-        <span class="go">Open activity &rarr;</span>
+      </div>
+      <div class="meta">
+        <span class="pill maths">Numbers &middot; Logic</span>
+        <span class="timer-badge"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2.4"/><path d="M12 13V8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>5 min</span>
       </div>
     </a>
 
-    <a class="card-link" href="games/number-of-the-day.html">
-      <div class="card">
-        <span class="pin" aria-hidden="true"></span>
-        <span class="tag">Numbers · Mental Maths</span>
-        <h2>Number of the Day</h2>
+    <a class="game-row maths" href="games/number-of-the-day.html">
+      <span class="num">04</span>
+      <div class="info">
+        <h3>Number of the Day</h3>
         <p>Six digits straight from today's date. Make every number from 1 to 20.</p>
-        <span class="go">Open activity &rarr;</span>
+      </div>
+      <div class="meta">
+        <span class="pill maths">Numbers &middot; Mental Maths</span>
+        <span class="timer-badge"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2.4"/><path d="M12 13V8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>5 min</span>
       </div>
     </a>
 
-    <a class="card-link" href="games/broken-calculator.html">
-      <div class="card">
-        <span class="pin" aria-hidden="true"></span>
-        <span class="tag">Numbers · Logic</span>
-        <h2>Broken Calculator</h2>
+    <a class="game-row maths" href="games/broken-calculator.html">
+      <span class="num">05</span>
+      <div class="info">
+        <h3>Broken Calculator</h3>
         <p>Only two or three buttons work. Reach the target in as few presses as you can.</p>
-        <span class="go">Open activity &rarr;</span>
+      </div>
+      <div class="meta">
+        <span class="pill maths">Numbers &middot; Logic</span>
+        <span class="timer-badge"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2.4"/><path d="M12 13V8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>5 min</span>
       </div>
     </a>
 
-    <a class="card-link" href="games/bulls-and-cows.html">
-      <div class="card">
-        <span class="pin" aria-hidden="true"></span>
-        <span class="tag">Numbers · Logic</span>
-        <h2>Bulls and Cows</h2>
+    <a class="game-row maths" href="games/bulls-and-cows.html">
+      <span class="num">06</span>
+      <div class="info">
+        <h3>Bulls and Cows</h3>
         <p>Guess the secret number using bulls and cows clues from every try.</p>
-        <span class="go">Open activity &rarr;</span>
+      </div>
+      <div class="meta">
+        <span class="pill maths">Numbers &middot; Logic</span>
+        <span class="timer-badge"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2.4"/><path d="M12 13V8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>5 min</span>
       </div>
     </a>
 
-    <a class="card-link" href="games/product-game.html">
-      <div class="card">
-        <span class="pin" aria-hidden="true"></span>
-        <span class="tag">Numbers · Two Player</span>
-        <h2>The Product Game</h2>
+    <a class="game-row maths" href="games/product-game.html">
+      <span class="num">07</span>
+      <div class="info">
+        <h3>The Product Game</h3>
         <p>Move a factor, claim the product, get four in a row. Printable for pen &amp; paper too.</p>
-        <span class="go">Open activity &rarr;</span>
+      </div>
+      <div class="meta">
+        <span class="pill maths">Numbers &middot; Two Player</span>
+        <span class="timer-badge"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2.4"/><path d="M12 13V8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>5 min</span>
       </div>
     </a>
 
   </div>
 
-  <footer>a growing shelf of five-minute warm-ups</footer>
+  <footer>a growing shelf of five-minute starters</footer>
 </div>
 
 </body>

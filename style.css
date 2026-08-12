@@ -1,36 +1,57 @@
 /* ============================================================
-   Shared theme — Starter Activities
+   Shared theme — Engaging Starters
    Every page in this site links to this file. Page-specific
    styles (the puzzle panel, the homepage's card grid, etc.)
    stay in that page's own <style> block below this link.
    ============================================================ */
 
 :root{
-  --chalkboard: #24402f;
-  --chalkboard-dark: #172c20;
-  --chalk-white: #ece7d6;
-  --chalk-dim: #b9c2ac;
-  --paper: #fbf8ef;
-  --paper-line: #ddd3ae;
-  --ink: #2b2b28;
-  --ink-soft: #6b6355;
-  --easy: #7fb685;
-  --easy-dark: #3f6b47;
-  --medium: #e3b23c;
-  --medium-dark: #93701f;
-  --hard: #c1594a;
-  --hard-dark: #7c3527;
-  --gold: #e3b23c;
-  --gold-dark: #93701f;
-  --p1: #8fb8d6;
-  --p1-dark: #3f6f92;
-  --p2: #c1594a;
-  --p2-dark: #7c3527;
-  --wood: #6b4a34;
-  --focus: #8fb8d6;
-  --pin: #c1594a;
-  --pin-dark: #7c3527;
-  --radius: 10px;
+  /* foundation */
+  --ink: #241b18;
+  --ink-soft: #6f6159;
+  --ground: #fff8f3;
+  --paper: #fffefb;
+  --card: #ffffff;
+  --paper-line: #ece1d3;
+  --line: rgba(36,27,24,0.10);
+
+  /* brand */
+  --brand: #ff4b3e;
+  --brand-dark: #c22e23;
+
+  /* subject accents */
+  --maths: #2f6fed;
+  --maths-dark: #1b3e85;
+  --science: #1fa679;
+  --science-dark: #146349;
+  --english: #c23b7a;
+  --english-dark: #7a2450;
+  --humanities: #e8912b;
+  --humanities-dark: #a85f10;
+
+  /* legacy tokens, aliased so every page recolors from here */
+  --chalkboard: var(--ink);
+  --chalkboard-dark: var(--ink);
+  --chalk-white: var(--ink);
+  --chalk-dim: var(--ink-soft);
+  --easy: var(--science);
+  --easy-dark: var(--science-dark);
+  --medium: var(--humanities);
+  --medium-dark: var(--humanities-dark);
+  --hard: var(--brand);
+  --hard-dark: var(--brand-dark);
+  --gold: #d6a01a;
+  --gold-dark: #96700f;
+  --p1: var(--maths);
+  --p1-dark: var(--maths-dark);
+  --p2: var(--humanities);
+  --p2-dark: var(--humanities-dark);
+  --wood: var(--ink);
+  --focus: var(--maths);
+  --pin: var(--brand);
+  --pin-dark: var(--brand-dark);
+
+  --radius: 14px;
 }
 
 * { box-sizing: border-box; }
@@ -38,16 +59,13 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--chalkboard);
-  color: var(--chalk-white);
-  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: 'Karla', system-ui, sans-serif;
   min-height: 100vh;
 }
 
 body {
-  background-image:
-    radial-gradient(ellipse at top left, rgba(255,255,255,0.03), transparent 60%),
-    radial-gradient(ellipse at bottom right, rgba(255,255,255,0.03), transparent 60%);
   padding: 28px 16px 60px;
 }
 
@@ -56,51 +74,313 @@ a { color: inherit; }
 .board {
   max-width: 640px;
   margin: 0 auto;
-  border: 10px solid var(--wood);
-  border-radius: 14px;
-  padding: 36px 32px 44px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.35), inset 0 0 60px rgba(0,0,0,0.25);
-  background: var(--chalkboard);
+  padding: 12px 4px 0;
 }
 
 .back-link {
-  display: inline-block;
-  font-family: 'Caveat', cursive;
-  font-size: 1.15rem;
-  color: var(--chalk-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
   text-decoration: none;
   margin-bottom: 8px;
   transition: color 0.15s ease;
 }
-.back-link:hover, .back-link:focus-visible { color: var(--chalk-white); }
+.back-link:hover, .back-link:focus-visible { color: var(--brand-dark); }
 
 header { text-align: center; margin-bottom: 30px; }
 
 header h1 {
-  font-family: 'Caveat', cursive;
+  font-family: 'Fredoka', system-ui, sans-serif;
   font-weight: 700;
-  font-size: clamp(2.6rem, 6vw, 4rem);
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
   margin: 0;
-  color: var(--chalk-white);
-  text-shadow: 0 0 1px rgba(236,231,214,0.4);
-  letter-spacing: 0.5px;
+  color: var(--ink);
+  letter-spacing: -0.01em;
 }
 
 header .num24 {
   font-family: 'Space Mono', monospace;
   font-weight: 700;
+  color: var(--brand);
 }
 
 header p {
-  font-family: 'Caveat', cursive;
-  font-size: 1.35rem;
-  color: var(--chalk-dim);
-  margin: 4px 0 0;
+  font-family: 'Karla', sans-serif;
+  font-size: 1.1rem;
+  color: var(--ink-soft);
+  margin: 6px 0 0;
 }
 
 footer {
   text-align: center;
-  color: var(--chalk-dim);
-  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
   margin-top: 34px;
+  font-family: 'Karla', sans-serif;
+}
+
+/* ---------- logo lockup, shared by every page header ---------- */
+
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  margin-bottom: 18px;
+}
+.brand-mark { width: 30px; height: 30px; flex-shrink: 0; }
+.brand-wordmark {
+  font-family: 'Fredoka', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+.brand-wordmark .a { color: var(--ink); }
+.brand-wordmark .b { color: var(--brand); }
+
+/* ---------- subject cover cards — used on the homepage ---------- */
+
+.cover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 22px;
+}
+
+.cover-card {
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 2px rgba(36,27,24,0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.cover-card:hover, .cover-card:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 28px rgba(36,27,24,0.14);
+}
+.cover-card:focus-visible { outline: 3px solid var(--maths); outline-offset: 2px; }
+
+.cover-card .cover {
+  height: 104px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 18px;
+}
+.cover-card .cover svg { width: 28px; height: 28px; }
+.cover-card .cover .count {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255,255,255,0.24);
+  padding: 4px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.cover-card.maths .cover { background: var(--maths); }
+.cover-card.science .cover { background: var(--science); }
+.cover-card.english .cover { background: var(--english); }
+.cover-card.humanities .cover { background: var(--humanities); }
+
+.cover-card .body {
+  padding: 16px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+}
+.cover-card h2 {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 1.3rem;
+  margin: 0;
+}
+.cover-card p {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  margin: 0;
+  flex-grow: 1;
+}
+.cover-card .go {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.cover-card.maths .go { color: var(--maths-dark); }
+.cover-card.science .go { color: var(--science-dark); }
+.cover-card.english .go { color: var(--english-dark); }
+.cover-card.humanities .go { color: var(--humanities-dark); }
+
+.cover-card-empty {
+  border: 2px dashed var(--line);
+  border-radius: 22px;
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--ink-soft);
+  padding: 20px;
+}
+.cover-card-empty .plus {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.4rem;
+  line-height: 1;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+.cover-card-empty p { font-family: 'Karla', sans-serif; font-size: 0.95rem; margin: 0; }
+
+/* ---------- strand filter, used on subject pages with multiple strands ---------- */
+
+.strand-filter {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 30px;
+}
+.strand-filter button {
+  font-family: 'Karla', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease;
+}
+.strand-filter button:hover { transform: translateY(-1px); }
+.strand-filter button.active { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+
+.game-row.hidden { display: none; }
+
+/* ---------- subject page header + game list ---------- */
+
+.subject-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.subject-chip {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.subject-chip svg { width: 24px; height: 24px; }
+.subject-chip.maths { background: var(--maths); }
+.subject-chip.science { background: var(--science); }
+.subject-chip.english { background: var(--english); }
+.subject-chip.humanities { background: var(--humanities); }
+
+.game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.game-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.game-row:hover, .game-row:focus-visible { transform: translateY(-2px); }
+.game-row:focus-visible { outline: 3px solid var(--maths); outline-offset: 2px; }
+
+.game-row .num {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  width: 22px;
+  flex-shrink: 0;
+}
+.game-row .info { flex-grow: 1; min-width: 0; }
+.game-row h3 {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 1.08rem;
+  margin: 0 0 3px;
+}
+.game-row p { font-size: 0.85rem; color: var(--ink-soft); margin: 0; line-height: 1.4; }
+.game-row .meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.game-row.maths:hover { border-color: var(--maths); }
+.game-row.science:hover { border-color: var(--science); }
+.game-row.english:hover { border-color: var(--english); }
+.game-row.humanities:hover { border-color: var(--humanities); }
+
+.pill {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.maths { background: rgba(47,111,237,0.12); color: var(--maths-dark); }
+.pill.science { background: rgba(31,166,121,0.12); color: var(--science-dark); }
+.pill.english { background: rgba(194,59,122,0.12); color: var(--english-dark); }
+.pill.humanities { background: rgba(232,145,43,0.14); color: var(--humanities-dark); }
+
+.timer-badge {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 0.72rem;
+  background: var(--ink);
+  color: var(--ground);
+  padding: 5px 9px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.timer-badge svg { width: 11px; height: 11px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cover-card, .cover-card:hover, .cover-card:focus-visible,
+  .game-row, .game-row:hover, .game-row:focus-visible {
+    transition: none;
+  }
 }

@@ -5,46 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Countdown Numbers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../../style.css">
 <style>
   .board { max-width: 720px; }
 
   /* ---- control panel ---- */
   .panel {
-    background: var(--paper);
+    background: var(--card);
     color: var(--ink);
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
     margin: 0 auto;
     padding: 26px 28px 22px;
     position: relative;
-    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
-  }
-
-  .panel::before {
-    content: "";
-    position: absolute;
-    top: -14px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90px;
-    height: 26px;
-    background: #c7bfa3;
-    border-radius: 3px;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-  }
-
-  .panel::after {
-    content: "";
-    position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #8a8266;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+    box-shadow: 0 1px 2px rgba(36,27,24,0.04);
   }
 
   .field-row {
@@ -94,15 +69,14 @@
 
   .new-btn {
     width: 100%;
-    font-family: 'Caveat', cursive;
-    font-weight: 700;
-    font-size: 1.5rem;
-    letter-spacing: 0.03em;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
     padding: 10px;
     border: none;
-    border-radius: 6px;
-    background: var(--ink);
-    color: var(--paper);
+    border-radius: 10px;
+    background: var(--brand);
+    color: #fff;
     cursor: pointer;
     transition: transform 0.08s ease;
   }
@@ -112,41 +86,27 @@
   .round-wrap { margin-top: 36px; }
 
   .puzzle-card {
-    background: var(--paper);
+    background: var(--card);
     color: var(--ink);
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
     padding: 26px 24px 24px;
     position: relative;
-    box-shadow: 0 10px 24px rgba(0,0,0,0.32);
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent, transparent 27px,
-      var(--paper-line) 28px
-    );
-  }
-
-  .puzzle-card::before {
-    content: "";
-    position: absolute;
-    top: 14px; left: 14px;
-    width: 13px; height: 13px;
-    border-radius: 50%;
-    background: var(--chalkboard);
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+    box-shadow: 0 1px 2px rgba(36,27,24,0.04);
   }
 
   .mix-tag {
     position: absolute;
-    top: 0; right: 16px;
-    font-family: 'Inter', sans-serif;
+    top: 14px; right: 14px;
+    font-family: 'Space Mono', monospace;
     font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #fff;
-    padding: 5px 11px 6px;
-    border-radius: 0 0 5px 5px;
-    background: var(--gold-dark);
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(214,160,26,0.16);
+    color: var(--gold-dark);
   }
 
   .tiles-row {
@@ -224,7 +184,7 @@
   .timer-display.done { color: var(--hard); }
 
   .timer-btn {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Karla', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--ink-soft);
@@ -242,7 +202,7 @@
   }
 
   .reveal-btn {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Karla', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--ink-soft);
@@ -263,7 +223,7 @@
     line-height: 1.7;
   }
   .answer .answer-head {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Karla', sans-serif;
     font-weight: 700;
     font-size: 0.8rem;
     text-transform: uppercase;
