@@ -1,1 +1,469 @@
-&lt;!DOCTYPE html&gt;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Timeline Order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<link rel="icon" href="../../../favicon.svg" type="image/svg+xml">
+<style>
+  .board { max-width: 760px; }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(36,27,24,0.04);
+    text-align: center;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .segmented button {
+    font-family: 'Karla', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 9px 14px;
+    border: none;
+    background: #fffdf7;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .segmented button + button { border-left: 1.5px solid var(--paper-line); }
+  .segmented button.active { background: var(--ink); color: var(--paper); }
+
+  .instructions { font-size: 0.85rem; color: var(--ink-soft); margin-top: 16px; }
+
+  .zone-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--ink-soft);
+    margin: 18px 0 8px;
+    text-align: left;
+  }
+
+  .event-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 50px;
+    padding: 10px;
+    border: 1.5px dashed var(--paper-line);
+    border-radius: 8px;
+    margin-bottom: 4px;
+  }
+  .event-tile {
+    font-family: 'Karla', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 10px 14px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: #fffefa;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.06s ease;
+  }
+  .event-tile:hover { transform: translateX(2px); }
+  .event-tile.placed { background: var(--gold); border-color: var(--gold-dark); color: var(--gold-dark); }
+  .event-tile .num { font-family: 'Space Mono', monospace; margin-right: 8px; }
+  .event-tile.dragging { opacity: 0.4; }
+
+  .btn-row { display: flex; justify-content: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .action-btn {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 8px 22px;
+    border: none;
+    border-radius: 10px;
+    background: var(--brand);
+    color: #fff;
+    cursor: pointer;
+  }
+  .action-btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ghost-btn {
+    font-family: 'Karla', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .result-msg { margin-top: 12px; font-size: 0.88rem; color: var(--ink-soft); min-height: 1.2em; }
+  .result-msg.correct { color: var(--gold-dark); font-weight: 700; }
+
+  .reveal-box {
+    display: none;
+    margin-top: 16px;
+    text-align: left;
+    border-top: 1.5px dashed var(--paper-line);
+    padding-top: 14px;
+  }
+  .reveal-box.show { display: block; }
+  .reveal-row {
+    display: flex;
+    gap: 12px;
+    font-size: 0.85rem;
+    padding: 4px 0;
+  }
+  .reveal-row .year { font-family: 'Space Mono', monospace; font-weight: 700; color: var(--gold-dark); min-width: 70px; }
+
+  .toolbar { display: flex; justify-content: center; margin-top: 30px; }
+  .new-btn {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    padding: 9px 26px;
+    border: none;
+    border-radius: 10px;
+    background: var(--brand);
+    color: #fff;
+    cursor: pointer;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  @media (max-width: 560px) { .board { padding: 24px 16px 34px; } }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="brand-lockup" href="../../../index.html">
+    <svg class="brand-mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="2" y="2" width="60" height="60" rx="18" fill="#ff4b3e"/>
+      <rect x="26" y="6" width="12" height="8" rx="4" fill="#fff8f3"/>
+      <circle cx="32" cy="35" r="19" fill="none" stroke="#fff8f3" stroke-width="4.5"/>
+      <line x1="32" y1="35" x2="32" y2="23" stroke="#fff8f3" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="32" y1="35" x2="41" y2="35" stroke="#fff8f3" stroke-width="4.5" stroke-linecap="round"/>
+    </svg>
+    <span class="brand-wordmark"><span class="a">Engaging</span> <span class="b">Starters</span></span>
+  </a>
+  <a class="back-link" href="../index.html">&larr; All Humanities activities</a>
+  <header>
+    <h1>Timeline Order</h1>
+    <p>click or drag the events into chronological order, earliest first</p>
+  </header>
+
+  <div class="panel">
+    <div class="field">
+      <label>Event set</label>
+      <div class="segmented" id="setToggle">
+        <button type="button" data-set="0" class="active">World milestones</button>
+        <button type="button" data-set="1">Ancient civilisations</button>
+        <button type="button" data-set="2">Australian history</button>
+        <button type="button" data-set="3">Inventions &amp; technology</button>
+      </div>
+    </div>
+
+    <div class="instructions">Click, or drag and drop, each event below to build your timeline, earliest first.</div>
+
+    <div class="zone-label">Your timeline (earliest &rarr; latest)</div>
+    <div class="event-col" id="answerCol"></div>
+
+    <div class="zone-label">Click or drag to add</div>
+    <div class="event-col" id="poolCol"></div>
+
+    <div class="btn-row">
+      <button type="button" class="action-btn" id="checkBtn">Check my order</button>
+      <button type="button" class="ghost-btn" id="resetBtn">Reset</button>
+      <button type="button" class="ghost-btn" id="revealBtn">Reveal answer</button>
+    </div>
+
+    <div class="result-msg" id="resultMsg"></div>
+    <div class="reveal-box" id="revealBox"></div>
+  </div>
+
+  <div class="toolbar">
+    <button type="button" class="new-btn" id="newBtn">Shuffle again</button>
+  </div>
+
+  <footer>Build the timeline from earliest to most recent, then check your order.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const ROUND_SIZE = 6;
+
+  const SETS = [
+    { name:"World milestones", events:[
+      { text:"Magna Carta signed", year:"1215" },
+      { text:"Invention of the printing press (Gutenberg)", year:"c. 1440" },
+      { text:"Fall of Constantinople", year:"1453" },
+      { text:"Columbus's expedition reaches the Americas", year:"1492" },
+      { text:"US Declaration of Independence signed", year:"1776" },
+      { text:"French Revolution begins", year:"1789" },
+      { text:"First powered flight (Wright brothers)", year:"1903" },
+      { text:"World War I begins", year:"1914" },
+      { text:"Russian Revolution", year:"1917" },
+      { text:"Discovery of penicillin (Alexander Fleming)", year:"1928" },
+      { text:"World War II ends", year:"1945" },
+      { text:"United Nations founded", year:"1945" },
+      { text:"First Moon landing", year:"1969" },
+      { text:"Chernobyl nuclear disaster", year:"1986" },
+      { text:"Fall of the Berlin Wall", year:"1989" },
+      { text:"September 11 terrorist attacks", year:"2001" },
+      { text:"COVID-19 declared a global pandemic", year:"2020" }
+    ]},
+    { name:"Ancient civilisations", events:[
+      { text:"Great Pyramid of Giza built", year:"c. 2560 BCE" },
+      { text:"Code of Hammurabi established", year:"c. 1754 BCE" },
+      { text:"Traditional date of the fall of Troy", year:"c. 1184 BCE" },
+      { text:"First Olympic Games held in ancient Greece", year:"776 BCE" },
+      { text:"Traditional founding of Rome", year:"753 BCE" },
+      { text:"Traditional birth of the Buddha", year:"c. 563 BCE" },
+      { text:"Alexander the Great dies", year:"323 BCE" },
+      { text:"Qin dynasty unifies the Great Wall of China", year:"221 BCE" },
+      { text:"Han dynasty begins in China", year:"206 BCE" },
+      { text:"Julius Caesar assassinated", year:"44 BCE" },
+      { text:"Cleopatra dies; Egypt becomes a Roman province", year:"30 BCE" },
+      { text:"Colosseum completed in Rome", year:"80 CE" },
+      { text:"Constantinople dedicated as imperial capital", year:"330 CE" },
+      { text:"Fall of the Western Roman Empire", year:"476 CE" }
+    ]},
+    { name:"Australian history", events:[
+      { text:"Willem Janszoon becomes first European to chart Australia's coast", year:"1606" },
+      { text:"James Cook charts Australia's east coast", year:"1770" },
+      { text:"First Fleet arrives at Sydney Cove", year:"1788" },
+      { text:"Convict transportation to NSW ends", year:"1840" },
+      { text:"Gold Rush begins in Victoria", year:"1851" },
+      { text:"Eureka Stockade rebellion", year:"1854" },
+      { text:"Ned Kelly captured at Glenrowan", year:"1880" },
+      { text:"Federation of Australia", year:"1901" },
+      { text:"Commonwealth Franchise Act (federal women's suffrage)", year:"1902" },
+      { text:"ANZAC troops land at Gallipoli", year:"1915" },
+      { text:"Australia becomes a founding member of the United Nations", year:"1945" },
+      { text:"Aboriginal Australians granted federal voting rights", year:"1962" },
+      { text:"1967 referendum counts Aboriginal Australians in the census", year:"1967" },
+      { text:"Sydney Opera House opens", year:"1973" },
+      { text:"Cyclone Tracy hits Darwin", year:"1974" },
+      { text:"Sydney Olympics held", year:"2000" }
+    ]},
+    { name:"Inventions & technology", events:[
+      { text:"Invention of the wheel", year:"c. 3500 BCE" },
+      { text:"Invention of the compass in China", year:"c. 200 BCE" },
+      { text:"Invention of gunpowder in China", year:"c. 9th century CE" },
+      { text:"Invention of the printing press", year:"c. 1440" },
+      { text:"James Watt patents an improved steam engine", year:"1769" },
+      { text:"Invention of the telephone (Alexander Graham Bell)", year:"1876" },
+      { text:"Invention of the light bulb (Thomas Edison)", year:"1879" },
+      { text:"Karl Benz builds the first automobile", year:"1886" },
+      { text:"Marconi sends the first transatlantic radio signal", year:"1901" },
+      { text:"John Logie Baird demonstrates television", year:"1926" },
+      { text:"Invention of the transistor (Bell Labs)", year:"1947" },
+      { text:"Release of the Altair 8800, an early personal computer", year:"1975" },
+      { text:"Invention of the World Wide Web (Tim Berners-Lee)", year:"1989" },
+      { text:"Launch of the first iPhone", year:"2007" }
+    ]}
+  ];
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  function pickRound(events, n){
+    if(events.length <= n) return events.slice();
+    const indices = shuffle(events.map((_,i)=>i)).slice(0,n).sort((a,b)=>a-b);
+    return indices.map(i=>events[i]);
+  }
+
+  const setToggle = document.getElementById('setToggle');
+  const answerCol = document.getElementById('answerCol');
+  const poolCol = document.getElementById('poolCol');
+  const checkBtn = document.getElementById('checkBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const revealBtn = document.getElementById('revealBtn');
+  const resultMsg = document.getElementById('resultMsg');
+  const revealBox = document.getElementById('revealBox');
+  const newBtn = document.getElementById('newBtn');
+
+  let setIndex = 0;
+  let roundEvents = [];
+  let placed = [];
+  let pool = [];
+  let done = false;
+  let dragInfo = null;
+
+  function attachDragEvents(el){
+    el.addEventListener('dragstart', ()=>{
+      if(done) return;
+      dragInfo = { list: el.dataset.list, idx: Number(el.dataset.idx) };
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', ()=>{
+      el.classList.remove('dragging');
+      dragInfo = null;
+    });
+  }
+
+  function dragAfterElement(container, y){
+    const tiles = Array.from(container.querySelectorAll('.event-tile:not(.dragging)'));
+    return tiles.reduce((closest, tile)=>{
+      const box = tile.getBoundingClientRect();
+      const offset = y - box.top - box.height/2;
+      if(offset < 0 && offset > closest.offset) return { offset, element: tile };
+      return closest;
+    }, { offset: -Infinity, element: null }).element;
+  }
+
+  function handleDrop(container, list){
+    return function(e){
+      e.preventDefault();
+      if(!dragInfo || done) return;
+      const after = dragAfterElement(container, e.clientY);
+      const destArr = list === 'placed' ? placed : pool;
+      let destIdx = after ? Number(after.dataset.idx) : destArr.length;
+      const sourceArr = dragInfo.list === 'placed' ? placed : pool;
+      const [item] = sourceArr.splice(dragInfo.idx, 1);
+      if(dragInfo.list === list && dragInfo.idx < destIdx) destIdx -= 1;
+      destArr.splice(destIdx, 0, item);
+      dragInfo = null;
+      render();
+    };
+  }
+
+  [answerCol, poolCol].forEach(col=>{
+    col.addEventListener('dragover', e=>{ e.preventDefault(); });
+  });
+  answerCol.addEventListener('drop', handleDrop(answerCol, 'placed'));
+  poolCol.addEventListener('drop', handleDrop(poolCol, 'pool'));
+
+  function render(){
+    const correctOrder = roundEvents;
+    answerCol.innerHTML = placed.length
+      ? placed.map((ev,i)=>`<span class="event-tile placed" draggable="true" data-list="placed" data-idx="${i}"><span class="num">${i+1}.</span>${ev.text}</span>`).join('')
+      : '<span style="color:var(--ink-soft);font-size:0.85rem;">(click, or drag, events below to build your timeline)</span>';
+
+    poolCol.innerHTML = pool.map((ev,i)=>`<span class="event-tile" draggable="true" data-list="pool" data-idx="${i}">${ev.text}</span>`).join('');
+
+    checkBtn.disabled = done || placed.length !== correctOrder.length;
+
+    Array.from(answerCol.querySelectorAll('.event-tile')).forEach(el=>{
+      el.addEventListener('click', ()=>{
+        if(done) return;
+        const idx = Number(el.dataset.idx);
+        pool.push(placed[idx]);
+        placed.splice(idx,1);
+        render();
+      });
+      attachDragEvents(el);
+    });
+    Array.from(poolCol.querySelectorAll('.event-tile')).forEach(el=>{
+      el.addEventListener('click', ()=>{
+        if(done) return;
+        const idx = Number(el.dataset.idx);
+        placed.push(pool[idx]);
+        pool.splice(idx,1);
+        render();
+      });
+      attachDragEvents(el);
+    });
+  }
+
+  function showReveal(){
+    revealBox.innerHTML = roundEvents.map(ev=>
+      `<div class="reveal-row"><span class="year">${ev.year}</span><span>${ev.text}</span></div>`
+    ).join('');
+    revealBox.classList.add('show');
+  }
+
+  function check(){
+    const correctOrder = roundEvents;
+    if(placed.length !== correctOrder.length) return;
+    let correct = 0;
+    for(let i=0;i<correctOrder.length;i++){
+      if(placed[i].text === correctOrder[i].text) correct++;
+    }
+    if(correct === correctOrder.length){
+      done = true;
+      resultMsg.textContent = `Correct! That's the timeline in order.`;
+      resultMsg.classList.add('correct');
+      showReveal();
+    } else {
+      resultMsg.textContent = `${correct} of ${correctOrder.length} in the right spot. Try again, or reveal the answer.`;
+      resultMsg.classList.remove('correct');
+    }
+  }
+
+  function startRound(){
+    placed = [];
+    roundEvents = pickRound(SETS[setIndex].events, ROUND_SIZE);
+    pool = shuffle(roundEvents);
+    done = false;
+    resultMsg.textContent = '';
+    resultMsg.classList.remove('correct');
+    revealBox.classList.remove('show');
+    revealBox.innerHTML = '';
+    render();
+  }
+
+  checkBtn.addEventListener('click', check);
+  resetBtn.addEventListener('click', ()=>{
+    if(done) return;
+    pool = shuffle(placed.concat(pool));
+    placed = [];
+    render();
+  });
+  revealBtn.addEventListener('click', ()=>{
+    done = true;
+    render();
+    if(!resultMsg.classList.contains('correct')){
+      resultMsg.textContent = "Here's the correct order:";
+    }
+    showReveal();
+  });
+  newBtn.addEventListener('click', startRound);
+
+  setToggle.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    Array.from(setToggle.children).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    setIndex = Number(btn.dataset.set);
+    startRound();
+  });
+
+  startRound();
+
+})();
+</script>
+
+</body>
+</html>
