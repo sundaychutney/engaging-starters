@@ -1,0 +1,153 @@
+name: Notion PR sync
+
+# When a PR that touches a game file is merged into main, mark that game
+# "Live" in the Starter Games Notion database and its "Game build" task
+# "Done" (creating the task if one doesn't already exist).
+#
+# Setup required (one-off, done by a repo admin — not by this workflow):
+#   1. Create a Notion integration at https://www.notion.so/my-integrations
+#      and copy its "Internal Integration Secret".
+#   2. Share both the "Starter Games" and "Roadmap & Tasks" databases in
+#      Notion with that integration (••• menu > Connections > add it).
+#   3. Add the secret to this repo: Settings > Secrets and variables >
+#      Actions > New repository secret, named NOTION_TOKEN.
+#
+# Matching: a game is identified by its live URL
+#   (https://engagingstarters.com/subjects/<subject>/games/<slug>.html)
+# built from any changed file under subjects/<subject>/games/<slug>.html,
+# matched against the "Link" property on the Starter Games row. PRs that
+# don't touch a games/*.html file are a no-op.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sync:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync merged game PR to Notion
+        uses: actions/github-script@v7
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        with:
+          script: |
+            const STARTER_GAMES_DB = '91a883f0-1d73-4e8a-a04b-43e60681c207';
+            const ROADMAP_TASKS_DB = 'b9341a55-d974-47d1-9873-2619af590edb';
+            const SITE_ORIGIN = 'https://engagingstarters.com';
+
+            const token = process.env.NOTION_TOKEN;
+            if (!token) {
+              core.warning('NOTION_TOKEN secret is not set — skipping Notion sync.');
+              return;
+            }
+
+            async function notion(path, options = {}) {
+              const res = await fetch(`https://api.notion.com/v1/${path}`, {
+                ...options,
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Notion-Version': '2022-06-28',
+                  'Content-Type': 'application/json',
+                  ...(options.headers || {}),
+                },
+              });
+              if (!res.ok) {
+                throw new Error(`Notion API ${path} failed: ${res.status} ${await res.text()}`);
+              }
+              return res.json();
+            }
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+
+            const gameFileRegex = /^subjects\/[a-z0-9-]+\/games\/[a-z0-9-]+\.html$/;
+            const gamePaths = [...new Set(
+              files.map((f) => f.filename).filter((path) => gameFileRegex.test(path))
+            )];
+
+            if (gamePaths.length === 0) {
+              console.log('No subjects/*/games/*.html files changed — nothing to sync.');
+              return;
+            }
+
+            const prUrl = context.payload.pull_request.html_url;
+
+            for (const path of gamePaths) {
+              const liveUrl = `${SITE_ORIGIN}/${path}`;
+
+              const gameQuery = await notion(`databases/${STARTER_GAMES_DB}/query`, {
+                method: 'POST',
+                body: JSON.stringify({
+                  filter: { property: 'Link', url: { equals: liveUrl } },
+                }),
+              });
+
+              if (gameQuery.results.length === 0) {
+                console.log(`No Starter Games row with Link=${liveUrl} — skipping.`);
+                continue;
+              }
+
+              const gamePage = gameQuery.results[0];
+              const gameName = gamePage.properties['Name']?.title?.[0]?.plain_text || path;
+
+              await notion(`pages/${gamePage.id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                  properties: { Status: { select: { name: 'Live' } } },
+                }),
+              });
+
+              const taskQuery = await notion(`databases/${ROADMAP_TASKS_DB}/query`, {
+                method: 'POST',
+                body: JSON.stringify({
+                  filter: {
+                    and: [
+                      { property: 'Category', select: { equals: 'Game build' } },
+                      { property: 'Related game', relation: { contains: gamePage.id } },
+                    ],
+                  },
+                }),
+              });
+
+              if (taskQuery.results.length > 0) {
+                for (const task of taskQuery.results) {
+                  await notion(`pages/${task.id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                      properties: {
+                        Status: { status: { name: 'Done' } },
+                        PR: { url: prUrl },
+                      },
+                    }),
+                  });
+                }
+                console.log(`Updated ${taskQuery.results.length} task(s) for "${gameName}".`);
+              } else {
+                await notion('pages', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    parent: { database_id: ROADMAP_TASKS_DB },
+                    properties: {
+                      'Task name': { title: [{ text: { content: `Build: ${gameName}` } }] },
+                      Category: { select: { name: 'Game build' } },
+                      Status: { status: { name: 'Done' } },
+                      PR: { url: prUrl },
+                      'Related game': { relation: [{ id: gamePage.id }] },
+                    },
+                  }),
+                });
+                console.log(`Created a new "Game build" task for "${gameName}".`);
+              }
+
+              console.log(`Marked "${gameName}" Live (${liveUrl}).`);
+            }
