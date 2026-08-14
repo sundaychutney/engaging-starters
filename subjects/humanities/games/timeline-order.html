@@ -91,6 +91,7 @@
   .event-tile:hover { transform: translateX(2px); }
   .event-tile.placed { background: var(--gold); border-color: var(--gold-dark); color: var(--gold-dark); }
   .event-tile .num { font-family: 'Space Mono', monospace; margin-right: 8px; }
+  .event-tile.dragging { opacity: 0.4; }
 
   .btn-row { display: flex; justify-content: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
   .action-btn {
@@ -171,7 +172,7 @@
   <a class="back-link" href="../index.html">&larr; All Humanities activities</a>
   <header>
     <h1>Timeline Order</h1>
-    <p>click the events into chronological order, earliest first</p>
+    <p>click or drag the events into chronological order, earliest first</p>
   </header>
 
   <div class="panel">
@@ -185,12 +186,12 @@
       </div>
     </div>
 
-    <div class="instructions">Click each event below, earliest first, to build your timeline.</div>
+    <div class="instructions">Click, or drag and drop, each event below to build your timeline, earliest first.</div>
 
     <div class="zone-label">Your timeline (earliest &rarr; latest)</div>
     <div class="event-col" id="answerCol"></div>
 
-    <div class="zone-label">Click to add</div>
+    <div class="zone-label">Click or drag to add</div>
     <div class="event-col" id="poolCol"></div>
 
     <div class="btn-row">
@@ -318,14 +319,59 @@
   let placed = [];
   let pool = [];
   let done = false;
+  let dragInfo = null;
+
+  function attachDragEvents(el){
+    el.addEventListener('dragstart', ()=>{
+      if(done) return;
+      dragInfo = { list: el.dataset.list, idx: Number(el.dataset.idx) };
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', ()=>{
+      el.classList.remove('dragging');
+      dragInfo = null;
+    });
+  }
+
+  function dragAfterElement(container, y){
+    const tiles = Array.from(container.querySelectorAll('.event-tile:not(.dragging)'));
+    return tiles.reduce((closest, tile)=>{
+      const box = tile.getBoundingClientRect();
+      const offset = y - box.top - box.height/2;
+      if(offset < 0 && offset > closest.offset) return { offset, element: tile };
+      return closest;
+    }, { offset: -Infinity, element: null }).element;
+  }
+
+  function handleDrop(container, list){
+    return function(e){
+      e.preventDefault();
+      if(!dragInfo || done) return;
+      const after = dragAfterElement(container, e.clientY);
+      const destArr = list === 'placed' ? placed : pool;
+      let destIdx = after ? Number(after.dataset.idx) : destArr.length;
+      const sourceArr = dragInfo.list === 'placed' ? placed : pool;
+      const [item] = sourceArr.splice(dragInfo.idx, 1);
+      if(dragInfo.list === list && dragInfo.idx < destIdx) destIdx -= 1;
+      destArr.splice(destIdx, 0, item);
+      dragInfo = null;
+      render();
+    };
+  }
+
+  [answerCol, poolCol].forEach(col=>{
+    col.addEventListener('dragover', e=>{ e.preventDefault(); });
+  });
+  answerCol.addEventListener('drop', handleDrop(answerCol, 'placed'));
+  poolCol.addEventListener('drop', handleDrop(poolCol, 'pool'));
 
   function render(){
     const correctOrder = roundEvents;
     answerCol.innerHTML = placed.length
-      ? placed.map((ev,i)=>`<span class="event-tile placed" data-idx="${i}"><span class="num">${i+1}.</span>${ev.text}</span>`).join('')
-      : '<span style="color:var(--ink-soft);font-size:0.85rem;">(click events below to build your timeline)</span>';
+      ? placed.map((ev,i)=>`<span class="event-tile placed" draggable="true" data-list="placed" data-idx="${i}"><span class="num">${i+1}.</span>${ev.text}</span>`).join('')
+      : '<span style="color:var(--ink-soft);font-size:0.85rem;">(click, or drag, events below to build your timeline)</span>';
 
-    poolCol.innerHTML = pool.map((ev,i)=>`<span class="event-tile" data-idx="${i}">${ev.text}</span>`).join('');
+    poolCol.innerHTML = pool.map((ev,i)=>`<span class="event-tile" draggable="true" data-list="pool" data-idx="${i}">${ev.text}</span>`).join('');
 
     checkBtn.disabled = done || placed.length !== correctOrder.length;
 
@@ -337,6 +383,7 @@
         placed.splice(idx,1);
         render();
       });
+      attachDragEvents(el);
     });
     Array.from(poolCol.querySelectorAll('.event-tile')).forEach(el=>{
       el.addEventListener('click', ()=>{
@@ -346,6 +393,7 @@
         pool.splice(idx,1);
         render();
       });
+      attachDragEvents(el);
     });
   }
 
