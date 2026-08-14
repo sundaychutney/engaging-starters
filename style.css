@@ -88,7 +88,8 @@ a { color: inherit; }
   letter-spacing: 0.04em;
   color: var(--ink-soft);
   text-decoration: none;
-  margin-bottom: 8px;
+  margin-left: -6px;
+  margin-bottom: 16px;
   transition: color 0.15s ease;
 }
 .back-link:hover, .back-link:focus-visible { color: var(--brand-dark); }
@@ -128,11 +129,12 @@ footer {
 /* ---------- logo lockup, shared by every page header ---------- */
 
 .brand-lockup {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  margin-bottom: 18px;
+  margin: 0 auto 26px;
 }
 .brand-mark { width: 30px; height: 30px; flex-shrink: 0; }
 .brand-wordmark {
