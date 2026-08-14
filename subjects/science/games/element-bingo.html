@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Element Bingo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<link rel="icon" href="../../../favicon.svg" type="image/svg+xml">
+<style>
+  .board { max-width: 660px; }
+
+  .panel {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    margin: 0 auto 18px;
+    padding: 22px 28px 20px;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(36,27,24,0.04);
+    text-align: center;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .segmented {
+    display: inline-flex;
+    justify-content: center;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .segmented button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 9px 16px;
+    border: none;
+    background: #fffdf7;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .segmented button + button { border-left: 1.5px solid var(--paper-line); }
+  .segmented button.active { background: var(--ink); color: var(--paper); }
+  .segmented button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .field-note { font-size: 0.76rem; color: var(--ink-soft); margin: 10px 0 0; }
+
+  .clue-display {
+    min-height: 3.6em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: 'Karla', sans-serif;
+    font-size: 1.15rem;
+    line-height: 1.4;
+    color: var(--ink);
+    padding: 6px 8px;
+  }
+  .clue-display.placeholder { color: var(--ink-soft); font-style: italic; font-size: 1rem; }
+
+  .call-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .call-btn {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    padding: 11px 30px;
+    border: none;
+    border-radius: 10px;
+    background: var(--brand);
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.08s ease;
+  }
+  .call-btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .call-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  .ghost-btn {
+    font-family: 'Karla', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .stat-row {
+    display: flex;
+    justify-content: center;
+    gap: 26px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1.5px dashed var(--paper-line);
+    font-family: 'Space Mono', monospace;
+  }
+  .stat { text-align: center; }
+  .stat .n { font-size: 1.5rem; font-weight: 700; color: var(--ink); }
+  .stat .label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+
+  .log-panel { text-align: left; }
+  .log-panel label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .call-log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 260px;
+    overflow-y: auto;
+    border-top: 1.5px dashed var(--paper-line);
+  }
+  .call-log li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 4px;
+    border-bottom: 1px dashed var(--paper-line);
+    font-size: 0.86rem;
+  }
+  .call-log .log-num { font-family: 'Space Mono', monospace; color: var(--ink-soft); width: 26px; flex-shrink: 0; }
+  .call-log .log-symbol {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    width: 34px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .call-log .log-name { flex: 1; color: var(--ink); }
+  .call-log .log-type {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    background: var(--ground);
+    border-radius: 5px;
+    padding: 3px 7px;
+    flex-shrink: 0;
+  }
+  .call-log .empty { text-align: center; color: var(--ink-soft); font-style: italic; padding: 14px 0; border-bottom: none; }
+
+  .print-panel .field { margin-bottom: 14px; }
+  .print-panel .count-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .count-input {
+    width: 64px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.95rem;
+    text-align: center;
+    padding: 8px 6px;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: #fffefa;
+    color: var(--ink);
+  }
+  .count-input:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(143,184,214,0.3); }
+  .print-panel .new-btn {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 9px 22px;
+    border: none;
+    border-radius: 10px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .print-panel .new-btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .print-panel .new-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ---- printable sheet (screen: hidden) ---- */
+  .print-sheet { display: none; }
+
+  @media (max-width: 560px) {
+    .board { padding: 24px 16px 34px; }
+  }
+
+  @page { size: A4; margin: 10mm; }
+
+  @media print {
+    body { background: #fff; padding: 0; color: #000; }
+    .board { border: none; box-shadow: none; padding: 0; background: #fff; }
+    .brand-lockup, .back-link, header, .panel, footer { display: none; }
+
+    .print-sheet { display: block; color: #000; }
+    .print-page {
+      page-break-after: always;
+      height: 277mm;
+      display: flex;
+      flex-direction: column;
+    }
+    .print-page:last-child { page-break-after: auto; }
+
+    .print-card {
+      flex: 1 1 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 6mm;
+      box-sizing: border-box;
+    }
+    .print-card.with-cut { border-bottom: 1.5px dashed #000; }
+    .print-card .cut-label {
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      padding: 0 6px;
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 0.06em;
+      color: #666;
+      text-transform: uppercase;
+    }
+    .print-card h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin: 0 0 8mm;
+      text-align: center;
+    }
+    .print-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4mm;
+      width: 105mm;
+    }
+    .print-grid div {
+      border: 1.5px solid #000;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .print-grid div.free { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 0.65rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="brand-lockup" href="../../../index.html">
+    <svg class="brand-mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="2" y="2" width="60" height="60" rx="18" fill="#ff4b3e"/>
+      <rect x="26" y="6" width="12" height="8" rx="4" fill="#fff8f3"/>
+      <circle cx="32" cy="35" r="19" fill="none" stroke="#fff8f3" stroke-width="4.5"/>
+      <line x1="32" y1="35" x2="32" y2="23" stroke="#fff8f3" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="32" y1="35" x2="41" y2="35" stroke="#fff8f3" stroke-width="4.5" stroke-linecap="round"/>
+    </svg>
+    <span class="brand-wordmark"><span class="a">Engaging</span> <span class="b">Starters</span></span>
+  </a>
+  <a class="back-link" href="../index.html">&larr; All Science activities</a>
+  <header>
+    <h1>Element Bingo</h1>
+    <p>call out clues for the class — print a card for every student</p>
+  </header>
+
+  <div class="panel">
+    <div class="field">
+      <label>Clue difficulty</label>
+      <div class="segmented" id="difficultyToggle">
+        <button type="button" data-difficulty="easy" disabled>Easy</button>
+        <button type="button" data-difficulty="medium" class="active" disabled>Medium</button>
+        <button type="button" data-difficulty="hard" disabled>Hard</button>
+      </div>
+      <p class="field-note" id="difficultyNote">Loading element data&hellip;</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="clue-display placeholder" id="clueDisplay">Loading element data&hellip;</div>
+    <div class="call-row">
+      <button type="button" class="call-btn" id="callBtn" disabled>Next clue</button>
+      <button type="button" class="ghost-btn" id="newGameBtn" disabled>New game</button>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="n" id="calledStat">0</div><div class="label">Called</div></div>
+      <div class="stat"><div class="n" id="remainingStat">0</div><div class="label">Remaining</div></div>
+    </div>
+  </div>
+
+  <div class="panel log-panel">
+    <label>Call history</label>
+    <ul class="call-log" id="callLog"><li class="empty">No clues called yet.</li></ul>
+  </div>
+
+  <div class="panel print-panel">
+    <div class="field">
+      <label>Printable class set</label>
+      <div class="count-row">
+        <input type="number" class="count-input" id="printCount" value="30" min="1" max="60">
+        <button type="button" class="new-btn" id="printBtn" disabled>Print bingo cards</button>
+      </div>
+      <p class="field-note">Prints roughly A5-sized cards, two per A4 sheet with a cut line between them &mdash; a fresh, unique set every time you print.</p>
+    </div>
+  </div>
+
+  <footer>Pick a difficulty, then press "Next clue" to read out a clue &mdash; students mark the matching element symbol on their printed card. Elements never repeat until you start a new game. Higher difficulty mixes in harder clue types (name, a defining property, a fuller description) rather than replacing the easier ones.</footer>
+
+  <div class="print-sheet" id="printSheet"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const GRID_SIZE = 5;
+  const FREE_INDEX = 12;
+
+  const DIFFICULTY_NOTES = {
+    easy: "Clues are just the element's name.",
+    medium: "Clues mix element names with a defining property (like atomic number).",
+    hard: "Clues mix names, properties and fuller descriptions — the widest, trickiest pool."
+  };
+
+  const difficultyToggle = document.getElementById('difficultyToggle');
+  const difficultyNote = document.getElementById('difficultyNote');
+  const clueDisplay = document.getElementById('clueDisplay');
+  const callBtn = document.getElementById('callBtn');
+  const newGameBtn = document.getElementById('newGameBtn');
+  const calledStat = document.getElementById('calledStat');
+  const remainingStat = document.getElementById('remainingStat');
+  const callLog = document.getElementById('callLog');
+  const printCount = document.getElementById('printCount');
+  const printBtn = document.getElementById('printBtn');
+  const printSheet = document.getElementById('printSheet');
+
+  let ELEMENTS = [];
+  let difficulty = 'medium';
+  let deck = [];
+  let called = [];
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  function clueTypesFor(level){
+    if(level === 'hard') return ['name','property','description'];
+    if(level === 'medium') return ['name','property'];
+    return ['name'];
+  }
+
+  function pickClue(el, level){
+    const types = clueTypesFor(level);
+    const type = types[Math.floor(Math.random()*types.length)];
+    const text = type === 'name' ? el.name : (type === 'property' ? el.property : el.description);
+    return { type, text };
+  }
+
+  function showClue(text, placeholder){
+    clueDisplay.textContent = text;
+    clueDisplay.classList.toggle('placeholder', !!placeholder);
+  }
+
+  function renderLog(){
+    if(!called.length){
+      callLog.innerHTML = '<li class="empty">No clues called yet.</li>';
+      return;
+    }
+    callLog.innerHTML = called.map((entry, i)=>{
+      const num = called.length - i;
+      return `<li><span class="log-num">${num}.</span><span class="log-symbol">${entry.el.symbol}</span><span class="log-name">${entry.el.name}</span><span class="log-type">${entry.clue.type}</span></li>`;
+    }).join('');
+  }
+
+  function updateStats(){
+    calledStat.textContent = called.length;
+    remainingStat.textContent = deck.length;
+  }
+
+  function newGame(){
+    deck = shuffle(ELEMENTS);
+    called = [];
+    callBtn.disabled = false;
+    callBtn.textContent = 'Next clue';
+    showClue('Press "Next clue" to begin', true);
+    renderLog();
+    updateStats();
+  }
+
+  function nextClue(){
+    if(!deck.length) return;
+    const el = deck.pop();
+    const clue = pickClue(el, difficulty);
+    called.unshift({ el, clue });
+    showClue(clue.text, false);
+    renderLog();
+    updateStats();
+    if(!deck.length){
+      callBtn.disabled = true;
+      callBtn.textContent = 'All elements called';
+      showClue(clue.text + ' — that was the last one! Start a new game to call again.', false);
+    }
+  }
+
+  function buildCard(){
+    const chosen = shuffle(ELEMENTS).slice(0, GRID_SIZE*GRID_SIZE - 1);
+    const card = [];
+    let t = 0;
+    for(let i=0;i<GRID_SIZE*GRID_SIZE;i++){
+      if(i === FREE_INDEX){ card.push({ symbol: 'FREE' }); }
+      else { card.push({ symbol: chosen[t].symbol }); t++; }
+    }
+    return card;
+  }
+
+  function cardHtml(card, n, withCut){
+    const cells = card.map((c, idx)=> idx===FREE_INDEX ? '<div class="free">FREE</div>' : `<div>${c.symbol}</div>`).join('');
+    const cut = withCut ? '<span class="cut-label">&#9986; cut here</span>' : '';
+    return `<div class="print-card${withCut ? ' with-cut' : ''}"><h2>Element Bingo &mdash; Card #${n}</h2><div class="print-grid">${cells}</div>${cut}</div>`;
+  }
+
+  function buildPrintSheet(){
+    const n = Math.min(60, Math.max(1, parseInt(printCount.value, 10) || 30));
+    let html = '';
+    for(let i=0; i<n; i+=2){
+      const hasPair = i+1 < n;
+      let page = cardHtml(buildCard(), i+1, hasPair);
+      if(hasPair) page += cardHtml(buildCard(), i+2, false);
+      html += `<div class="print-page">${page}</div>`;
+    }
+    printSheet.innerHTML = html;
+  }
+
+  difficultyToggle.addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn || btn.disabled) return;
+    Array.from(difficultyToggle.children).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    difficulty = btn.dataset.difficulty;
+    difficultyNote.textContent = DIFFICULTY_NOTES[difficulty];
+    newGame();
+  });
+
+  callBtn.addEventListener('click', nextClue);
+  newGameBtn.addEventListener('click', newGame);
+  printBtn.addEventListener('click', function(){
+    buildPrintSheet();
+    window.print();
+  });
+
+  fetch('data/elements.json')
+    .then(res => res.json())
+    .then(data => {
+      ELEMENTS = data;
+      Array.from(difficultyToggle.querySelectorAll('button')).forEach(b=> b.disabled = false);
+      newGameBtn.disabled = false;
+      printBtn.disabled = false;
+      difficultyNote.textContent = DIFFICULTY_NOTES[difficulty];
+      newGame();
+    })
+    .catch(() => {
+      showClue('Could not load element data — try reloading the page.', true);
+    });
+
+})();
+</script>
+
+</body>
+</html>
