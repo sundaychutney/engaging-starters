@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Angle Estimator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../style.css">
+<link rel="icon" href="../../../favicon.svg" type="image/svg+xml">
+<style>
+  .panel {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    margin: 0 auto;
+    padding: 26px 28px 22px;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(36,27,24,0.04);
+    text-align: center;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .segmented {
+    display: inline-flex;
+    justify-content: center;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .segmented button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 9px 16px;
+    border: none;
+    background: #fffdf7;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .segmented button + button { border-left: 1.5px solid var(--paper-line); }
+  .segmented button.active { background: var(--ink); color: var(--paper); }
+
+  .new-btn {
+    display: block;
+    margin: 18px auto 0;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 10px 26px;
+    border: none;
+    border-radius: 10px;
+    background: var(--brand);
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.08s ease;
+  }
+  .new-btn:hover { transform: translateY(-1px); }
+
+  /* ---- game ---- */
+  .game-wrap { margin-top: 34px; }
+
+  .game {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 24px 22px 26px;
+    box-shadow: 0 1px 2px rgba(36,27,24,0.04);
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+  }
+  .stat-row .score-val { color: var(--maths-dark); }
+
+  .diagram-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .diagram-wrap svg {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+  }
+
+  .ray { stroke: var(--ink); stroke-width: 4; stroke-linecap: round; }
+  .vertex-dot { fill: var(--ink); }
+  .angle-arc { fill: none; stroke: var(--maths); stroke-width: 3; }
+  .angle-label {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 15px;
+    fill: var(--maths-dark);
+  }
+
+  .guess-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .guess-slider {
+    width: 100%;
+    max-width: 340px;
+    accent-color: var(--brand);
+  }
+
+  .guess-number-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .guess-input {
+    width: 90px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1.3rem;
+    text-align: center;
+    padding: 8px 6px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: #fffefa;
+    color: var(--ink);
+  }
+  .guess-input:focus {
+    outline: none;
+    border-color: var(--focus);
+    box-shadow: 0 0 0 3px rgba(143,184,214,0.3);
+  }
+  .guess-unit { font-family: 'Karla', sans-serif; color: var(--ink-soft); font-weight: 600; }
+
+  .lock-btn {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 9px 24px;
+    border: none;
+    border-radius: 10px;
+    background: var(--brand);
+    color: #fff;
+    cursor: pointer;
+  }
+  .lock-btn:hover { transform: translateY(-1px); }
+  .lock-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .util-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 12px 0 4px;
+  }
+
+  .ghost-btn {
+    font-family: 'Karla', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1.3px dashed var(--ink-soft);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .feedback {
+    display: none;
+    text-align: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1.5px dashed var(--paper-line);
+  }
+  .feedback.show { display: block; }
+  .feedback .msg {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: var(--gold-dark);
+    margin-bottom: 6px;
+  }
+  .feedback .detail {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+  .feedback .detail b { color: var(--ink); }
+
+  .next-btn {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 9px 24px;
+    border: none;
+    border-radius: 10px;
+    background: var(--ink);
+    color: var(--ground);
+    cursor: pointer;
+  }
+  .next-btn:hover { transform: translateY(-1px); }
+
+  .history {
+    margin-top: 18px;
+    border-top: 1.5px dashed var(--paper-line);
+    padding-top: 12px;
+  }
+  .history-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    padding: 5px 4px;
+  }
+  .history-row:nth-child(odd) { background: rgba(0,0,0,0.03); }
+  .history-row .pts { color: var(--maths-dark); font-weight: 700; }
+
+  .summary {
+    display: none;
+    text-align: center;
+  }
+  .summary.show { display: block; }
+  .summary .tier {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--gold-dark);
+    margin-bottom: 8px;
+  }
+  .summary .figures {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+  }
+  .summary .figures b { color: var(--ink); }
+
+  @media (max-width: 560px) {
+    .board { padding: 24px 16px 34px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <a class="brand-lockup" href="../../../index.html">
+    <svg class="brand-mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="2" y="2" width="60" height="60" rx="18" fill="#ff4b3e"/>
+      <rect x="26" y="6" width="12" height="8" rx="4" fill="#fff8f3"/>
+      <circle cx="32" cy="35" r="19" fill="none" stroke="#fff8f3" stroke-width="4.5"/>
+      <line x1="32" y1="35" x2="32" y2="23" stroke="#fff8f3" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="32" y1="35" x2="41" y2="35" stroke="#fff8f3" stroke-width="4.5" stroke-linecap="round"/>
+    </svg>
+    <span class="brand-wordmark"><span class="a">Engaging</span> <span class="b">Starters</span></span>
+  </a>
+  <a class="back-link" href="../index.html">&larr; All activities</a>
+  <header>
+    <h1>Angle Estimator</h1>
+    <p>train your eye — how close can you guess?</p>
+  </header>
+
+  <div class="panel">
+    <div class="field">
+      <label>Angle range</label>
+      <div class="segmented" id="rangeToggle">
+        <button type="button" data-mode="basic" class="active">Up to 180&deg;</button>
+        <button type="button" data-mode="reflex">Any angle (reflex)</button>
+      </div>
+    </div>
+    <button type="button" class="new-btn" id="newBtn">New game</button>
+  </div>
+
+  <div class="game-wrap">
+    <div class="game">
+      <div class="stat-row">
+        <span id="roundLabel">Round 1 of 8</span>
+        <span>Score: <span class="score-val" id="scoreLabel">0</span></span>
+      </div>
+
+      <div class="diagram-wrap">
+        <svg id="diagram" viewBox="0 0 260 240" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+
+      <div id="guessArea">
+        <div class="guess-row">
+          <input type="range" class="guess-slider" id="guessSlider" min="0" max="180" value="90" step="1">
+          <div class="guess-number-row">
+            <input type="number" class="guess-input" id="guessInput" min="0" max="180" value="90">
+            <span class="guess-unit">degrees</span>
+          </div>
+        </div>
+        <div class="util-row">
+          <button type="button" class="lock-btn" id="lockBtn">Lock in guess</button>
+        </div>
+        <div class="util-row">
+          <button type="button" class="ghost-btn" id="skipBtn">Skip this angle</button>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedback">
+        <div class="msg" id="feedbackMsg"></div>
+        <div class="detail" id="feedbackDetail"></div>
+        <button type="button" class="next-btn" id="nextBtn">Next angle &rarr;</button>
+      </div>
+
+      <div class="summary" id="summary">
+        <div class="tier" id="summaryTier"></div>
+        <div class="figures" id="summaryFigures"></div>
+        <button type="button" class="new-btn" id="playAgainBtn">Play again</button>
+      </div>
+
+      <div class="history" id="history"></div>
+    </div>
+  </div>
+
+  <footer>Estimate the marked angle, lock in your guess, then see how close your eye was. Score is out of 100 per round.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const ROUNDS = 8;
+  const d2r = Math.PI / 180;
+
+  const rangeToggle = document.getElementById('rangeToggle');
+  const newBtn = document.getElementById('newBtn');
+  const roundLabel = document.getElementById('roundLabel');
+  const scoreLabel = document.getElementById('scoreLabel');
+  const diagram = document.getElementById('diagram');
+  const guessArea = document.getElementById('guessArea');
+  const guessSlider = document.getElementById('guessSlider');
+  const guessInput = document.getElementById('guessInput');
+  const lockBtn = document.getElementById('lockBtn');
+  const skipBtn = document.getElementById('skipBtn');
+  const feedback = document.getElementById('feedback');
+  const feedbackMsg = document.getElementById('feedbackMsg');
+  const feedbackDetail = document.getElementById('feedbackDetail');
+  const nextBtn = document.getElementById('nextBtn');
+  const summary = document.getElementById('summary');
+  const summaryTier = document.getElementById('summaryTier');
+  const summaryFigures = document.getElementById('summaryFigures');
+  const playAgainBtn = document.getElementById('playAgainBtn');
+  const history = document.getElementById('history');
+
+  let mode = 'basic';
+  let round = 0;
+  let totalScore = 0;
+  let totalError = 0;
+  let currentAngle = 0;
+  let locked = false;
+
+  function maxForMode(){ return mode === 'basic' ? 180 : 360; }
+
+  function randomAngle(){
+    if(mode === 'basic'){
+      return 8 + Math.floor(Math.random() * 168); // 8..175
+    }
+    return 8 + Math.floor(Math.random() * 345); // 8..352
+  }
+
+  function point(cx, cy, r, deg){
+    const rad = deg * d2r;
+    return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+  }
+
+  function drawDiagram(angleDeg, reveal){
+    const cx = 130, cy = 130;
+    const rayLen = 90, arcR = 34;
+    const theta1 = Math.floor(Math.random() * 360);
+    const theta2 = theta1 + angleDeg;
+
+    const p1 = point(cx, cy, rayLen, theta1);
+    const p2 = point(cx, cy, rayLen, theta2);
+    const a1 = point(cx, cy, arcR, theta1);
+    const a2 = point(cx, cy, arcR, theta2);
+    const largeArc = angleDeg > 180 ? 1 : 0;
+    const labelPt = point(cx, cy, arcR + 22, theta1 + angleDeg / 2);
+
+    let svg = '';
+    svg += `<line class="ray" x1="${cx}" y1="${cy}" x2="${p1.x.toFixed(2)}" y2="${p1.y.toFixed(2)}"/>`;
+    svg += `<line class="ray" x1="${cx}" y1="${cy}" x2="${p2.x.toFixed(2)}" y2="${p2.y.toFixed(2)}"/>`;
+    svg += `<path class="angle-arc" d="M ${a1.x.toFixed(2)} ${a1.y.toFixed(2)} A ${arcR} ${arcR} 0 ${largeArc} 0 ${a2.x.toFixed(2)} ${a2.y.toFixed(2)}"/>`;
+    svg += `<circle class="vertex-dot" cx="${cx}" cy="${cy}" r="4.5"/>`;
+    if(reveal){
+      svg += `<text class="angle-label" x="${labelPt.x.toFixed(2)}" y="${labelPt.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle">${angleDeg}&deg;</text>`;
+    }
+    diagram.innerHTML = svg;
+    diagram.dataset.theta1 = theta1;
+    diagram.dataset.cx = cx;
+    diagram.dataset.cy = cy;
+  }
+
+  function tierFor(avgError){
+    if(avgError <= 5) return 'Eagle eyes — you could be a protractor!';
+    if(avgError <= 10) return 'Sharp estimator!';
+    if(avgError <= 20) return 'Solid effort.';
+    return 'Keep practising your angle sense.';
+  }
+
+  function feedbackFor(error){
+    if(error <= 3) return 'Bullseye!';
+    if(error <= 7) return 'Sharp eye!';
+    if(error <= 15) return 'Not bad.';
+    if(error <= 25) return 'Getting there.';
+    return 'Keep practising.';
+  }
+
+  function startRound(){
+    locked = false;
+    currentAngle = randomAngle();
+    drawDiagram(currentAngle, false);
+
+    const max = maxForMode();
+    guessSlider.min = 0;
+    guessSlider.max = max;
+    guessSlider.value = Math.round(max / 2);
+    guessInput.min = 0;
+    guessInput.max = max;
+    guessInput.value = Math.round(max / 2);
+
+    guessArea.style.display = '';
+    feedback.classList.remove('show');
+    lockBtn.disabled = false;
+    roundLabel.textContent = `Round ${round + 1} of ${ROUNDS}`;
+  }
+
+  function clampGuess(v){
+    const max = maxForMode();
+    if(isNaN(v)) v = Math.round(max / 2);
+    return Math.min(max, Math.max(0, Math.round(v)));
+  }
+
+  function lockGuess(skip){
+    if(locked) return;
+    locked = true;
+
+    const guess = skip ? null : clampGuess(Number(guessInput.value));
+    const error = skip ? maxForMode() : Math.abs(guess - currentAngle);
+    const points = skip ? 0 : Math.max(0, Math.round(100 - error * 3));
+
+    totalScore += points;
+    totalError += error;
+    round++;
+
+    drawDiagram(currentAngle, true);
+    guessArea.style.display = 'none';
+
+    feedbackMsg.textContent = skip ? 'Skipped.' : feedbackFor(error);
+    feedbackDetail.innerHTML = skip
+      ? `The angle was <b>${currentAngle}&deg;</b>.`
+      : `You guessed <b>${guess}&deg;</b>, the angle was <b>${currentAngle}&deg;</b> &mdash; off by <b>${error}&deg;</b> &middot; <b>${points}</b> points`;
+    feedback.classList.add('show');
+
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    row.innerHTML = skip
+      ? `<span>Round ${round}: skipped</span><span>actual ${currentAngle}&deg;</span>`
+      : `<span>Round ${round}: guessed ${guess}&deg;, actual ${currentAngle}&deg;</span><span class="pts">${points} pts</span>`;
+    history.insertBefore(row, history.firstChild);
+
+    scoreLabel.textContent = totalScore;
+  }
+
+  function finishGame(){
+    guessArea.style.display = 'none';
+    feedback.classList.remove('show');
+    roundLabel.textContent = `Finished · ${ROUNDS} rounds`;
+    const avgError = Math.round((totalError / ROUNDS) * 10) / 10;
+    summaryTier.textContent = tierFor(avgError);
+    summaryFigures.innerHTML = `Total score: <b>${totalScore}</b> / ${ROUNDS * 100} &middot; Average error: <b>${avgError}&deg;</b>`;
+    summary.classList.add('show');
+  }
+
+  function startGame(){
+    round = 0;
+    totalScore = 0;
+    totalError = 0;
+    scoreLabel.textContent = '0';
+    history.innerHTML = '';
+    summary.classList.remove('show');
+    startRound();
+  }
+
+  guessSlider.addEventListener('input', () => { guessInput.value = guessSlider.value; });
+  guessInput.addEventListener('input', () => {
+    let v = guessInput.value.replace(/[^0-9]/g, '');
+    guessInput.value = v;
+    if(v !== '') guessSlider.value = clampGuess(Number(v));
+  });
+  guessInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') lockGuess(false); });
+
+  lockBtn.addEventListener('click', () => lockGuess(false));
+  skipBtn.addEventListener('click', () => lockGuess(true));
+
+  nextBtn.addEventListener('click', () => {
+    if(round >= ROUNDS){ finishGame(); }
+    else { startRound(); }
+  });
+
+  rangeToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    Array.from(rangeToggle.children).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+    startGame();
+  });
+
+  newBtn.addEventListener('click', startGame);
+  playAgainBtn.addEventListener('click', startGame);
+
+  startGame();
+
+})();
+</script>
+
+</body>
+</html>
