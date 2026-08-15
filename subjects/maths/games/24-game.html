@@ -511,7 +511,7 @@
   });
 
   // generate an initial set on load so the page isn't empty
-  genForm.dispatchEvent(new Event('submit'));
+  genForm.dispatchEvent(new Event('submit', { cancelable: true }));
 })();
 </script>
 
