@@ -14,9 +14,14 @@ name: Notion PR sync
 #
 # Matching: a game is identified by its live URL
 #   (https://engagingstarters.com/subjects/<subject>/games/<slug>.html)
-# built from any changed file under subjects/<subject>/games/<slug>.html,
-# matched against the "Link" property on the Starter Games row. PRs that
-# don't touch a games/*.html file are a no-op.
+# built from any changed file under subjects/<subject>/games/<slug>.html.
+# The Starter Games row is found by matching that URL against "Link", OR by
+# matching the game's <h1> title (as shipped) against "Name" — so a row
+# without a pre-filled Link still gets picked up. On a match the workflow
+# always writes Status=Live and the computed Link, and fills Description
+# from the page's <header> tagline whenever Description is currently empty
+# (an existing hand-written description is left alone). PRs that don't
+# touch a games/*.html file are a no-op.
 
 on:
   pull_request:
@@ -81,30 +86,63 @@ jobs:
             }
 
             const prUrl = context.payload.pull_request.html_url;
+            const mergeRef = context.payload.pull_request.merge_commit_sha;
+
+            // Pull the shipped <h1>title</h1> ... <p>tagline</p> out of a game
+            // file so we can match on Name even when Link isn't pre-filled,
+            // and so we have a fallback Description for rows that lack one.
+            async function readGameHeader(path) {
+              try {
+                const { data } = await github.rest.repos.getContent({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  path,
+                  ref: mergeRef,
+                });
+                const html = Buffer.from(data.content, 'base64').toString('utf8');
+                const match = html.match(/<h1[^>]*>([^<]+)<\/h1>\s*<p[^>]*>([^<]+)<\/p>/i);
+                if (!match) return { title: null, tagline: null };
+                const title = match[1].trim();
+                const tagline = match[2].trim().replace(/^./, (c) => c.toUpperCase());
+                return { title, tagline };
+              } catch (err) {
+                core.warning(`Couldn't read ${path}@${mergeRef}: ${err.message}`);
+                return { title: null, tagline: null };
+              }
+            }
 
             for (const path of gamePaths) {
               const liveUrl = `${SITE_ORIGIN}/${path}`;
+              const { title, tagline } = await readGameHeader(path);
+
+              const orFilters = [{ property: 'Link', url: { equals: liveUrl } }];
+              if (title) orFilters.push({ property: 'Name', title: { equals: title } });
 
               const gameQuery = await notion(`databases/${STARTER_GAMES_DB}/query`, {
                 method: 'POST',
-                body: JSON.stringify({
-                  filter: { property: 'Link', url: { equals: liveUrl } },
-                }),
+                body: JSON.stringify({ filter: { or: orFilters } }),
               });
 
               if (gameQuery.results.length === 0) {
-                console.log(`No Starter Games row with Link=${liveUrl} — skipping.`);
+                console.log(`No Starter Games row matching Link=${liveUrl} or Name="${title}" — skipping.`);
                 continue;
               }
 
               const gamePage = gameQuery.results[0];
               const gameName = gamePage.properties['Name']?.title?.[0]?.plain_text || path;
+              const hasDescription = (gamePage.properties['Description']?.rich_text?.length || 0) > 0;
+
+              const properties = {
+                Status: { select: { name: 'Live' } },
+                Link: { url: liveUrl },
+              };
+              if (!hasDescription && tagline) {
+                properties.Description = { rich_text: [{ text: { content: tagline } }] };
+              }
 
               await notion(`pages/${gamePage.id}`, {
                 method: 'PATCH',
-                body: JSON.stringify({
-                  properties: { Status: { select: { name: 'Live' } } },
-                }),
+                body: JSON.stringify({ properties }),
               });
 
               const taskQuery = await notion(`databases/${ROADMAP_TASKS_DB}/query`, {
