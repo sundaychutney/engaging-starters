@@ -252,7 +252,6 @@
   .answer .more { display: block; color: var(--ink-soft); font-size: 0.72rem; margin-top: 2px; }
 
   .puzzle-card.revealed .answer { display: block; }
-  .puzzle-card.revealed .reveal-btn { display: none; }
 
   @media (max-width: 560px) {
     .field-row { grid-template-columns: 1fr 1fr; }
@@ -464,8 +463,9 @@
           ${extra>0 ? `<span class="more">+ ${extra} more way${extra===1?'':'s'}</span>` : ''}
         </div>
       `;
-      card.querySelector('.reveal-btn').addEventListener('click', ()=>{
-        card.classList.add('revealed');
+      card.querySelector('.reveal-btn').addEventListener('click', function(){
+        const revealed = card.classList.toggle('revealed');
+        this.textContent = revealed ? 'Hide answer' : 'Reveal answer';
       });
       cardGrid.appendChild(card);
     });
@@ -501,7 +501,10 @@
   toggleAllBtn.addEventListener('click', function(){
     const cards = Array.from(cardGrid.querySelectorAll('.puzzle-card'));
     const anyHidden = cards.some(c=>!c.classList.contains('revealed'));
-    cards.forEach(c=>c.classList.toggle('revealed', anyHidden));
+    cards.forEach(c=>{
+      c.classList.toggle('revealed', anyHidden);
+      c.querySelector('.reveal-btn').textContent = anyHidden ? 'Hide answer' : 'Reveal answer';
+    });
     toggleAllBtn.textContent = anyHidden ? 'Hide all answers' : 'Reveal all answers';
   });
 
