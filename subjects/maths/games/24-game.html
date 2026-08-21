@@ -449,7 +449,7 @@
     list.forEach((p, idx)=>{
       const card = document.createElement('div');
       card.className = 'puzzle-card';
-      const shownSolutions = p.solutions.slice(0,2);
+      const shownSolutions = p.count < 5 ? p.solutions : p.solutions.slice(0,2);
       const extra = p.count - shownSolutions.length;
       card.innerHTML = `
         <span class="puzzle-idx">#${idx+1}</span>
