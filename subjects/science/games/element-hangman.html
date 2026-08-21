@@ -27,6 +27,29 @@
   .figure-wrap .part { opacity: 0; transition: opacity 0.15s ease; }
   .figure-wrap .part.show { opacity: 1; }
 
+  .difficulty-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+  .diff-btn {
+    font-family: 'Karla', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 5px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 20px;
+    background: var(--card);
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .diff-btn:hover { border-color: var(--science); }
+  .diff-btn.active { background: var(--science); border-color: var(--science-dark); color: #fff; }
+
   .word-row {
     display: flex;
     justify-content: center;
@@ -139,7 +162,19 @@
         <line class="part" id="part-arm-r" x1="95" y1="65" x2="115" y2="85" stroke="var(--hard-dark)" stroke-width="4" stroke-linecap="round"/>
         <line class="part" id="part-leg-l" x1="95" y1="95" x2="78" y2="122" stroke="var(--hard-dark)" stroke-width="4" stroke-linecap="round"/>
         <line class="part" id="part-leg-r" x1="95" y1="95" x2="112" y2="122" stroke="var(--hard-dark)" stroke-width="4" stroke-linecap="round"/>
+        <g class="part" id="part-eyes">
+          <circle cx="90" cy="36" r="1.6" fill="var(--hard-dark)"/>
+          <circle cx="100" cy="36" r="1.6" fill="var(--hard-dark)"/>
+        </g>
+        <path class="part" id="part-frown" d="M89,46 Q95,41 101,46" fill="none" stroke="var(--hard-dark)" stroke-width="2" stroke-linecap="round"/>
       </svg>
+    </div>
+
+    <div class="difficulty-row" id="difficultyRow">
+      <span>Difficulty:</span>
+      <button type="button" class="diff-btn" data-wrong="4">Hard</button>
+      <button type="button" class="diff-btn active" data-wrong="6">Medium</button>
+      <button type="button" class="diff-btn" data-wrong="8">Easy</button>
     </div>
 
     <div class="word-row" id="wordRow"></div>
@@ -156,7 +191,7 @@
     <button type="button" class="new-btn" id="newBtn" disabled>Loading elements…</button>
   </div>
 
-  <footer>All 118 elements of the periodic table. Six wrong guesses and the diagram is complete.</footer>
+  <footer>All 118 elements of the periodic table. Choose a difficulty above — fewer wrong guesses is harder.</footer>
 </div>
 
 <script>
@@ -164,8 +199,8 @@
   "use strict";
 
   const DATA_URL = '../../../assets/data/elements.json';
-  const MAX_WRONG = 6;
-  const PARTS = ['part-head','part-body','part-arm-l','part-arm-r','part-leg-l','part-leg-r'];
+  const PARTS = ['part-head','part-body','part-arm-l','part-arm-r','part-leg-l','part-leg-r','part-eyes','part-frown'];
+  let MAX_WRONG = 6;
 
   const wordRow = document.getElementById('wordRow');
   const keyboard = document.getElementById('keyboard');
@@ -174,6 +209,7 @@
   const loseBanner = document.getElementById('loseBanner');
   const factBox = document.getElementById('factBox');
   const newBtn = document.getElementById('newBtn');
+  const difficultyRow = document.getElementById('difficultyRow');
 
   let elements = [];
   let queue = [];
@@ -279,6 +315,15 @@
   }
 
   newBtn.addEventListener('click', startRound);
+
+  difficultyRow.addEventListener('click', (e) => {
+    const btn = e.target.closest('.diff-btn');
+    if(!btn || btn.classList.contains('active')) return;
+    Array.from(difficultyRow.querySelectorAll('.diff-btn')).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    MAX_WRONG = parseInt(btn.dataset.wrong, 10);
+    if(elements.length) startRound();
+  });
 
   document.addEventListener('keydown', (e) => {
     if(e.ctrlKey || e.altKey || e.metaKey) return;
